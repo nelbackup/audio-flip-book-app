@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Crocodile Who Didn't Like Water</title>
+
+  <!-- StPageFlip Engine -->
+  <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #1a1a1f;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      color: #fff;
+    }
+
+    /* Flipbook Viewport */
+    .stage-wrapper {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 82vh;
+    }
+
+    .flipbook-container {
+      transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    /* Front Cover: Center right page and mask out the empty left leaf */
+    .flipbook-container.cover-front {
+      transform: translateX(-25%);
+      clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
+    }
+
+    /* Back Cover: Center left page and mask out the empty right leaf */
+    .flipbook-container.cover-back {
+      transform: translateX(25%);
+      clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+    }
+
+    /* Open Spreads: Seamless view across spine */
+    .flipbook-container.spread-open {
+      transform: translateX(0);
+      clip-path: none;
+    }
+
+    /* Controls Bar */
+    .controls {
+      position: fixed;
+      bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      background: rgba(15, 23, 42, 0.88);
+      padding: 0.75rem 1.8rem;
+      border-radius: 9999px;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+    }
+
+    button {
+      background: #4f46e5;
+      color: #ffffff;
+      border: none;
+      padding: 0.65rem 1.35rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    button:hover {
+      background: #4338ca;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    .status {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      min-width: 170px;
+      text-align: center;
+      user-select: none;
+    }
+
+    .status small {
+      display: block;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Book Viewport -->
+  <div class="stage-wrapper">
+    <div id="flipbook-wrapper" class="flipbook-container cover-front">
+      <div id="flipbook"></div>
+    </div>
+  </div>
+
+  <!-- Audio Element -->
+  <audio id="soundtrack" preload="auto"></audio>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button id="btn-prev">‹ Prev</button>
+    <button id="btn-play">▶ Play Story</button>
+    <button id="btn-next">Next ›</button>
+    <div class="status" id="page-counter">
+      <span id="page-title">Front Cover</span>
+      <small id="audio-time">0:00 / 3:08</small>
+    </div>
+  </div>
+
+  <script>
+    const TOTAL_PAGES = 30; // page-0 to page-29
+    const PAGES_DIR = 'pages';
+
+    // Cue points matched to storybook spreads
+    const cuePoints = [
+      { pageIndex: 0,  startTime: 0.0,   endTime: 12.0,  title: "Front Cover" },
+      { pageIndex: 1,  startTime: 12.0,  endTime: 21.5,  title: "Endpaper" },
+      { pageIndex: 3,  startTime: 21.5,  endTime: 27.5,  title: "Once Upon a Time" },
+      { pageIndex: 5,  startTime: 27.5,  endTime: 33.0,  title: "Didn't Like Water" },
+      { pageIndex: 7,  startTime: 33.0,  endTime: 42.0,  title: "Swim Club" },
+      { pageIndex: 9,  startTime: 42.0,  endTime: 55.0,  title: "Climbing Trees" },
+      { pageIndex: 11, startTime: 55.0,  endTime: 69.0,  title: "The Tooth Fairy" },
+      { pageIndex: 13, startTime: 69.0,  endTime: 76.0,  title: "Can't Play Ball" },
+      { pageIndex: 15, startTime: 76.0,  endTime: 82.5,  title: "The Diving Board" },
+      { pageIndex: 17, startTime: 82.5,  endTime: 97.0,  title: "One, Two, Three..." },
+      { pageIndex: 19, startTime: 97.0,  endTime: 113.0, title: "Splosh! Glug! Help!" },
+      { pageIndex: 21, startTime: 113.0, endTime: 129.0, title: "The Tickle Grows" },
+      { pageIndex: 23, startTime: 129.0, endTime: 134.5, title: "...OOOOO! (Fire!)" },
+      { pageIndex: 25, startTime: 134.5, endTime: 149.0, title: "He Was a Dragon!" },
+      { pageIndex: 27, startTime: 149.0, endTime: 158.0, title: "Born to Fly" },
+      { pageIndex: 29, startTime: 158.0, endTime: 999.0, title: "Back Cover" }
+    ];
+
+    const bookContainer = document.getElementById('flipbook');
+    const stageWrapper = document.getElementById('flipbook-wrapper');
+    const audio = document.getElementById('soundtrack');
+    const playBtn = document.getElementById('btn-play');
+    const prevBtn = document.getElementById('btn-prev');
+    const nextBtn = document.getElementById('btn-next');
+    const pageTitle = document.getElementById('page-title');
+    const audioTime = document.getElementById('audio-time');
+
+    let isAudioTurning = false;
+    let isUserSeeking = false;
+
+    function getSpreadIndex(page) {
+      if (page <= 0) return 0;
+      if (page >= TOTAL_PAGES - 1) return TOTAL_PAGES - 1;
+      return page % 2 === 1 ? page : page - 1;
+    }
+
+    function getCueForSpread(spreadIdx) {
+      return cuePoints.find(c => c.pageIndex === spreadIdx) || cuePoints[0];
+    }
+
+    function getCueForTime(time) {
+      let matched = cuePoints[0];
+      for (let i = 0; i < cuePoints.length; i++) {
+        if (time >= cuePoints[i].startTime) {
+          matched = cuePoints[i];
+        } else {
+          break;
+        }
+      }
+      return matched;
+    }
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    // Preload audio into memory blob for instant seeking
+    fetch('soundtrack.mp3')
+      .then(res => res.blob())
+      .then(blob => {
+        audio.src = URL.createObjectURL(blob);
+      })
+      .catch(() => {
+        audio.src = 'soundtrack.mp3';
+      });
+
+    // 1. Initialize PageFlip
+    const pageFlip = new St.PageFlip(bookContainer, {
+      width: 480,
+      height: 640,
+      size: "stretch",
+      minWidth: 350,
+      maxWidth: 650,
+      minHeight: 450,
+      maxHeight: 880,
+      showCover: true,
+      drawShadow: true,
+      flippingTime: 700,
+      usePortrait: false,
+      maxShadowOpacity: 0.35
+    });
+
+    const pageImages = [];
+    for (let i = 0; i < TOTAL_PAGES; i++) {
+      pageImages.push(`${PAGES_DIR}/page-${i}.webp`);
+    }
+    pageFlip.loadFromImages(pageImages);
+
+    // 2. Alignment and Mask Manager
+    function applyCoverAlignment(pageIndex) {
+      const spread = getSpreadIndex(pageIndex);
+      const cue = getCueForSpread(spread);
+      pageTitle.innerText = cue.title;
+
+      stageWrapper.classList.remove('cover-front', 'cover-back', 'spread-open');
+
+      if (spread === 0) {
+        stageWrapper.classList.add('cover-front');
+      } else if (spread >= TOTAL_PAGES - 1) {
+        stageWrapper.classList.add('cover-back');
+      } else {
+        stageWrapper.classList.add('spread-open');
+      }
+    }
+
+    pageFlip.on('changeState', (e) => {
+      if (e.data === 'flipping') {
+        stageWrapper.classList.remove('cover-front', 'cover-back');
+        stageWrapper.classList.add('spread-open');
+      } else if (e.data === 'read') {
+        isAudioTurning = false;
+        applyCoverAlignment(pageFlip.getCurrentPageIndex());
+      }
+    });
+
+    // 3. Audio -> Page Flip
+    audio.addEventListener('timeupdate', () => {
+      audioTime.innerText = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration || 188)}`;
+
+      if (audio.paused || isUserSeeking) return;
+
+      const currentCue = getCueForTime(audio.currentTime);
+      const currentVisibleSpread = getSpreadIndex(pageFlip.getCurrentPageIndex());
+
+      if (currentVisibleSpread !== currentCue.pageIndex && !isAudioTurning) {
+        isAudioTurning = true;
+        pageFlip.flip(currentCue.pageIndex);
+      }
+    });
+
+    // 4. User Flip -> Audio Alignment
+    pageFlip.on('flip', (e) => {
+      const newPageIndex = e.data;
+      const spread = getSpreadIndex(newPageIndex);
+      applyCoverAlignment(spread);
+
+      if (!isAudioTurning) {
+        const cue = getCueForSpread(spread);
+        isUserSeeking = true;
+        audio.currentTime = cue.startTime;
+
+        setTimeout(() => {
+          isUserSeeking = false;
+        }, 300);
+      }
+    });
+
+    // 5. Navigation Controls
+    prevBtn.addEventListener('click', () => pageFlip.flipPrev());
+    nextBtn.addEventListener('click', () => pageFlip.flipNext());
+
+    playBtn.addEventListener('click', () => {
+      if (audio.paused) {
+        const currentSpread = getSpreadIndex(pageFlip.getCurrentPageIndex());
+        const cue = getCueForSpread(currentSpread);
+
+        if (audio.currentTime < cue.startTime || audio.currentTime >= cue.endTime) {
+          audio.currentTime = cue.startTime;
+        }
+
+        audio.play();
+        playBtn.innerText = '❚❚ Pause';
+      } else {
+        audio.pause();
+        playBtn.innerText = '▶ Play Story';
+      }
+    });
+
+    audio.addEventListener('ended', () => {
+      playBtn.innerText = '▶ Play Story';
+    });
+  </script>
+</body>
+</html>

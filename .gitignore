@@ -1,0 +1,14 @@
+# Python & Environment
+__pycache__/
+*.py[cod]
+*$py.class
+*.py
+
+# Local scripts & tools
+*.bat
+pages_raw/
+storybook.pdf
+
+# OS junk
+.DS_Store
+Thumbs.db
