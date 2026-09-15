@@ -41,19 +41,16 @@
       transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
-    /* Front Cover: Center right page and mask out the empty left leaf */
     .flipbook-container.cover-front {
       transform: translateX(-25%);
       clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
     }
 
-    /* Back Cover: Center left page and mask out the empty right leaf */
     .flipbook-container.cover-back {
       transform: translateX(25%);
       clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
     }
 
-    /* Open Spreads: Seamless view across spine */
     .flipbook-container.spread-open {
       transform: translateX(0);
       clip-path: none;
@@ -101,7 +98,7 @@
     .status {
       font-size: 0.85rem;
       color: #cbd5e1;
-      min-width: 170px;
+      min-width: 175px;
       text-align: center;
       user-select: none;
     }
@@ -116,17 +113,14 @@
 </head>
 <body>
 
-  <!-- Book Viewport -->
   <div class="stage-wrapper">
     <div id="flipbook-wrapper" class="flipbook-container cover-front">
       <div id="flipbook"></div>
     </div>
   </div>
 
-  <!-- Audio Element -->
   <audio id="soundtrack" preload="auto"></audio>
 
-  <!-- Controls -->
   <div class="controls">
     <button id="btn-prev">‹ Prev</button>
     <button id="btn-play">▶ Play Story</button>
@@ -138,27 +132,27 @@
   </div>
 
   <script>
-    const TOTAL_PAGES = 30; // page-0 to page-29
+    const TOTAL_PAGES = 30;
     const PAGES_DIR = 'pages';
 
-    // Cue points matched to storybook spreads
+    // Calibrated Cue Points mapped to soundtrack narration
     const cuePoints = [
-      { pageIndex: 0,  startTime: 0.0,   endTime: 12.0,  title: "Front Cover" },
-      { pageIndex: 1,  startTime: 12.0,  endTime: 21.5,  title: "Endpaper" },
+      { pageIndex: 0,  startTime: 0.0,   endTime: 13.0,  title: "Front Cover" },
+      { pageIndex: 1,  startTime: 13.0,  endTime: 21.5,  title: "Endpaper" },
       { pageIndex: 3,  startTime: 21.5,  endTime: 27.5,  title: "Once Upon a Time" },
       { pageIndex: 5,  startTime: 27.5,  endTime: 33.0,  title: "Didn't Like Water" },
-      { pageIndex: 7,  startTime: 33.0,  endTime: 42.0,  title: "Swim Club" },
-      { pageIndex: 9,  startTime: 42.0,  endTime: 55.0,  title: "Climbing Trees" },
-      { pageIndex: 11, startTime: 55.0,  endTime: 69.0,  title: "The Tooth Fairy" },
-      { pageIndex: 13, startTime: 69.0,  endTime: 76.0,  title: "Can't Play Ball" },
-      { pageIndex: 15, startTime: 76.0,  endTime: 82.5,  title: "The Diving Board" },
-      { pageIndex: 17, startTime: 82.5,  endTime: 97.0,  title: "One, Two, Three..." },
-      { pageIndex: 19, startTime: 97.0,  endTime: 113.0, title: "Splosh! Glug! Help!" },
-      { pageIndex: 21, startTime: 113.0, endTime: 129.0, title: "The Tickle Grows" },
-      { pageIndex: 23, startTime: 129.0, endTime: 134.5, title: "...OOOOO! (Fire!)" },
-      { pageIndex: 25, startTime: 134.5, endTime: 149.0, title: "He Was a Dragon!" },
-      { pageIndex: 27, startTime: 149.0, endTime: 158.0, title: "Born to Fly" },
-      { pageIndex: 29, startTime: 158.0, endTime: 999.0, title: "Back Cover" }
+      { pageIndex: 7,  startTime: 33.0,  endTime: 41.5,  title: "Swim Club" },
+      { pageIndex: 9,  startTime: 41.5,  endTime: 52.0,  title: "Climbing Trees" },
+      { pageIndex: 11, startTime: 52.0,  endTime: 64.5,  title: "The Tooth Fairy" },
+      { pageIndex: 13, startTime: 64.5,  endTime: 72.5,  title: "Can't Play Ball" },
+      { pageIndex: 15, startTime: 72.5,  endTime: 80.5,  title: "The Diving Board" },
+      { pageIndex: 17, startTime: 80.5,  endTime: 92.5,  title: "One, Two, Three..." },
+      { pageIndex: 19, startTime: 92.5,  endTime: 107.0, title: "Splosh! Glug! Help!" },
+      { pageIndex: 21, startTime: 107.0, endTime: 125.5, title: "The Tickle Grows" },
+      { pageIndex: 23, startTime: 125.5, endTime: 130.5, title: "...OOOOO! (Fire!)" },
+      { pageIndex: 25, startTime: 130.5, endTime: 144.0, title: "He Was a Dragon!" },
+      { pageIndex: 27, startTime: 144.0, endTime: 153.0, title: "Born to Fly" },
+      { pageIndex: 29, startTime: 153.0, endTime: 999.0, title: "Back Cover" }
     ];
 
     const bookContainer = document.getElementById('flipbook');
@@ -201,7 +195,7 @@
       return `${m}:${s < 10 ? '0' : ''}${s}`;
     }
 
-    // Preload audio into memory blob for instant seeking
+    // Preload audio into memory blob
     fetch('soundtrack.mp3')
       .then(res => res.blob())
       .then(blob => {
@@ -211,7 +205,7 @@
         audio.src = 'soundtrack.mp3';
       });
 
-    // 1. Initialize PageFlip
+    // Initialize PageFlip
     const pageFlip = new St.PageFlip(bookContainer, {
       width: 480,
       height: 640,
@@ -233,7 +227,6 @@
     }
     pageFlip.loadFromImages(pageImages);
 
-    // 2. Alignment and Mask Manager
     function applyCoverAlignment(pageIndex) {
       const spread = getSpreadIndex(pageIndex);
       const cue = getCueForSpread(spread);
@@ -260,13 +253,15 @@
       }
     });
 
-    // 3. Audio -> Page Flip
+    // Real-time audio sync loop
     audio.addEventListener('timeupdate', () => {
       audioTime.innerText = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration || 188)}`;
 
+      const currentCue = getCueForTime(audio.currentTime);
+      pageTitle.innerText = currentCue.title;
+
       if (audio.paused || isUserSeeking) return;
 
-      const currentCue = getCueForTime(audio.currentTime);
       const currentVisibleSpread = getSpreadIndex(pageFlip.getCurrentPageIndex());
 
       if (currentVisibleSpread !== currentCue.pageIndex && !isAudioTurning) {
@@ -275,7 +270,7 @@
       }
     });
 
-    // 4. User Flip -> Audio Alignment
+    // Turn event -> Audio seek
     pageFlip.on('flip', (e) => {
       const newPageIndex = e.data;
       const spread = getSpreadIndex(newPageIndex);
@@ -292,7 +287,6 @@
       }
     });
 
-    // 5. Navigation Controls
     prevBtn.addEventListener('click', () => pageFlip.flipPrev());
     nextBtn.addEventListener('click', () => pageFlip.flipNext());
 
