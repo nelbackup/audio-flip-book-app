@@ -41,17 +41,19 @@
       transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
-    /* Center single covers and mask dummy canvas leaves */
+    /* Front Cover: Center single leaf, mask left canvas leaf */
     .flipbook-container.cover-front {
       transform: translateX(-25%);
       clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
     }
 
+    /* Back Cover: Center single leaf, mask right canvas leaf */
     .flipbook-container.cover-back {
       transform: translateX(25%);
       clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
     }
 
+    /* Open Spreads: Seamless display across spine */
     .flipbook-container.spread-open {
       transform: translateX(0);
       clip-path: none;
@@ -114,14 +116,17 @@
 </head>
 <body>
 
+  <!-- Book Viewport -->
   <div class="stage-wrapper">
     <div id="flipbook-wrapper" class="flipbook-container cover-front">
       <div id="flipbook"></div>
     </div>
   </div>
 
+  <!-- Audio Element -->
   <audio id="soundtrack" preload="auto"></audio>
 
+  <!-- Controls -->
   <div class="controls">
     <button id="btn-prev">‹ Prev</button>
     <button id="btn-play">▶ Play Story</button>
@@ -133,27 +138,28 @@
   </div>
 
   <script>
-    const TOTAL_PAGES = 30;
+    const TOTAL_PAGES = 31; // page-0.webp through page-30.webp
     const PAGES_DIR = 'pages';
 
-    // Synchronized cue points aligned with story spreads
+    // Narration cue points mapped to 31 pages / spreads
     const cuePoints = [
-      { pageIndex: 0,  startTime: 0.0,   endTime: 21.5,  title: "Front Cover" },
-      { pageIndex: 1,  startTime: 21.5,  endTime: 27.5,  title: "Once Upon a Time" },
-      { pageIndex: 3,  startTime: 27.5,  endTime: 33.0,  title: "Didn't Like Water" },
-      { pageIndex: 5,  startTime: 33.0,  endTime: 41.5,  title: "Swim Club" },
-      { pageIndex: 7,  startTime: 41.5,  endTime: 52.0,  title: "Climbing Trees" },
-      { pageIndex: 9,  startTime: 52.0,  endTime: 64.5,  title: "The Tooth Fairy" },
-      { pageIndex: 11, startTime: 64.5,  endTime: 72.5,  title: "Can't Play Ball" },
-      { pageIndex: 13, startTime: 72.5,  endTime: 80.5,  title: "The Diving Ladder" },
-      { pageIndex: 15, startTime: 80.5,  endTime: 92.5,  title: "One, Two, Three..." },
-      { pageIndex: 17, startTime: 92.5,  endTime: 107.0, title: "Splosh! Glug! Help!" },
-      { pageIndex: 19, startTime: 107.0, endTime: 125.5, title: "The Tickle Grows" },
-      { pageIndex: 21, startTime: 125.5, endTime: 130.5, title: "...OOOOO! (Fire!)" },
-      { pageIndex: 23, startTime: 130.5, endTime: 144.0, title: "He Was a Dragon!" },
-      { pageIndex: 25, startTime: 144.0, endTime: 155.0, title: "Born to Fly" },
-      { pageIndex: 27, startTime: 155.0, endTime: 168.0, title: "Bedtime Story" },
-      { pageIndex: 29, startTime: 168.0, endTime: 999.0, title: "Back Cover" }
+      { pageIndex: 0,  startTime: 0.0,   endTime: 13.0,  title: "Front Cover" },
+      { pageIndex: 1,  startTime: 13.0,  endTime: 21.5,  title: "Endpaper" },
+      { pageIndex: 3,  startTime: 21.5,  endTime: 27.5,  title: "Once Upon a Time" },
+      { pageIndex: 5,  startTime: 27.5,  endTime: 33.0,  title: "Didn't Like Water" },
+      { pageIndex: 7,  startTime: 33.0,  endTime: 41.5,  title: "Swim Club" },
+      { pageIndex: 9,  startTime: 41.5,  endTime: 52.0,  title: "Climbing Trees" },
+      { pageIndex: 11, startTime: 52.0,  endTime: 64.5,  title: "The Tooth Fairy" },
+      { pageIndex: 13, startTime: 64.5,  endTime: 72.5,  title: "Can't Play Ball" },
+      { pageIndex: 15, startTime: 72.5,  endTime: 80.5,  title: "The Diving Ladder" },
+      { pageIndex: 17, startTime: 80.5,  endTime: 92.5,  title: "One, Two, Three..." },
+      { pageIndex: 19, startTime: 92.5,  endTime: 107.0, title: "Splosh! Glug! Help!" },
+      { pageIndex: 21, startTime: 107.0, endTime: 125.5, title: "The Tickle Grows" },
+      { pageIndex: 23, startTime: 125.5, endTime: 130.5, title: "...OOOOO! (Fire!)" },
+      { pageIndex: 25, startTime: 130.5, endTime: 144.0, title: "He Was a Dragon!" },
+      { pageIndex: 27, startTime: 144.0, endTime: 155.0, title: "Born to Fly" },
+      { pageIndex: 29, startTime: 155.0, endTime: 168.0, title: "Bedtime Outro" },
+      { pageIndex: 30, startTime: 168.0, endTime: 999.0, title: "Back Cover" }
     ];
 
     const bookContainer = document.getElementById('flipbook');
@@ -168,6 +174,7 @@
     let isAudioTurning = false;
     let isUserSeeking = false;
 
+    // Helper: Map single page index to its two-page spread root
     function getSpreadIndex(page) {
       if (page <= 0) return 0;
       if (page >= TOTAL_PAGES - 1) return TOTAL_PAGES - 1;
@@ -222,9 +229,10 @@
       maxShadowOpacity: 0.35
     });
 
+    // Load page-0.webp through page-30.webp with cache-busting
     const pageImages = [];
     for (let i = 0; i < TOTAL_PAGES; i++) {
-      pageImages.push(`${PAGES_DIR}/page-${i}.webp`);
+      pageImages.push(`${PAGES_DIR}/page-${i}.webp?v=2`);
     }
     pageFlip.loadFromImages(pageImages);
 
@@ -288,6 +296,7 @@
       }
     });
 
+    // Navigation Controls
     prevBtn.addEventListener('click', () => pageFlip.flipPrev());
     nextBtn.addEventListener('click', () => pageFlip.flipNext());
 
