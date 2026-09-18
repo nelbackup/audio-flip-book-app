@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Podcast MP3 Downloader</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #1a1a1f;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      padding: 1.5rem;
+    }
+
+    .card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 1.25rem;
+      width: 100%;
+      max-width: 580px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #f8fafc;
+    }
+
+    p.subtitle {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+      line-height: 1.4;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 0.6rem;
+      color: #f1f5f9;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #6366f1;
+    }
+
+    button {
+      background: #4f46e5;
+      color: #ffffff;
+      border: none;
+      padding: 0.85rem 1.4rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 0.6rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    button:hover {
+      background: #4338ca;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button:disabled {
+      background: #334155;
+      color: #64748b;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: none;
+    }
+
+    .meta {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+
+    .meta img {
+      width: 72px;
+      height: 72px;
+      border-radius: 0.6rem;
+      object-fit: cover;
+      background: #0f172a;
+    }
+
+    .meta-details {
+      overflow: hidden;
+    }
+
+    .meta-details h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #f8fafc;
+    }
+
+    .meta-details p {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 0.25rem;
+    }
+
+    audio {
+      width: 100%;
+      height: 40px;
+      margin-bottom: 1.25rem;
+      border-radius: 0.5rem;
+    }
+
+    .download-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .btn-download {
+      flex: 1;
+      background: #10b981;
+      text-decoration: none;
+      color: #ffffff;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-align: center;
+      display: inline-block;
+      transition: background 0.2s;
+    }
+
+    .btn-download:hover {
+      background: #059669;
+    }
+
+    .status-msg {
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      color: #f43f5e;
+      display: none;
+    }
+
+    .nav-link {
+      display: inline-block;
+      margin-top: 1.5rem;
+      font-size: 0.85rem;
+      color: #818cf8;
+      text-decoration: none;
+    }
+
+    .nav-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>Podcast Audio Extractor</h1>
+    <p class="subtitle">Paste any Apple Podcasts episode link to resolve and download the direct MP3 soundtrack without an Apple ID.</p>
+
+    <div class="input-group">
+      <input 
+        type="text" 
+        id="podcast-url" 
+        placeholder="https://podcasts.apple.com/.../id1620768367?i=1000595918891" 
+        value="https://podcasts.apple.com/hk/podcast/%E5%B0%8F%E8%B1%AC%E4%B8%8A%E8%A1%97%E8%B2%B7%E6%9D%B1%E8%A5%BF-%E5%85%92%E7%AB%A5%E7%B2%B5%E8%AA%9E%E6%95%85%E4%BA%8B/id1620768367?i=1000595918891"
+      />
+      <button id="btn-fetch">Resolve Audio Stream</button>
+      <div id="status" class="status-msg"></div>
+    </div>
+
+    <div id="result" class="result">
+      <div class="meta">
+        <img id="artwork" src="" alt="Cover" />
+        <div class="meta-details">
+          <h2 id="track-title">Episode Title</h2>
+          <p id="release-date">Release Date</p>
+        </div>
+      </div>
+
+      <audio id="audio-preview" controls></audio>
+
+      <div class="download-actions">
+        <a id="download-link" class="btn-download" target="_blank" rel="noopener noreferrer">
+          ⬇ Download MP3 File
+        </a>
+      </div>
+    </div>
+
+    <a href="index.html" class="nav-link">← Return to Flip Book</a>
+  </div>
+
+  <script>
+    const urlInput = document.getElementById('podcast-url');
+    const fetchBtn = document.getElementById('btn-fetch');
+    const statusMsg = document.getElementById('status');
+    const resultBox = document.getElementById('result');
+    const artwork = document.getElementById('artwork');
+    const trackTitle = document.getElementById('track-title');
+    const releaseDate = document.getElementById('release-date');
+    const audioPreview = document.getElementById('audio-preview');
+    const downloadLink = document.getElementById('download-link');
+
+    function showError(msg) {
+      statusMsg.innerText = msg;
+      statusMsg.style.display = 'block';
+      resultBox.style.display = 'none';
+      fetchBtn.disabled = false;
+      fetchBtn.innerText = 'Resolve Audio Stream';
+    }
+
+    fetchBtn.addEventListener('click', () => {
+      const rawUrl = urlInput.value.trim();
+      statusMsg.style.display = 'none';
+
+      // 1. Extract Show ID (e.g., id1620768367)
+      const showMatch = rawUrl.match(/id(\d+)/i);
+      if (!showMatch) {
+        showError('Invalid Apple Podcasts URL. Could not locate Show ID (idXXXXXXXX).');
+        return;
+      }
+      const showId = showMatch[1];
+
+      // 2. Extract Episode ID if present (?i=1000595918891)
+      const episodeMatch = rawUrl.match(/[?&]i=(\d+)/i);
+      const episodeId = episodeMatch ? parseInt(episodeMatch[1], 10) : null;
+
+      fetchBtn.disabled = true;
+      fetchBtn.innerText = 'Resolving feed...';
+
+      // 3. Query Apple Directory via JSONP (No CORS blocks)
+      const callbackName = 'itunesCallback_' + Date.now();
+      const apiUrl = `https://itunes.apple.com/lookup?id=${showId}&entity=podcastEpisode&limit=150&callback=${callbackName}`;
+
+      window[callbackName] = function(data) {
+        // Clean up injected script tag
+        delete window[callbackName];
+        const scriptElem = document.getElementById(callbackName);
+        if (scriptElem) scriptElem.remove();
+
+        if (!data || !data.results || data.results.length <= 1) {
+          showError('No episodes found for this podcast show.');
+          return;
+        }
+
+        const episodes = data.results.filter(r => r.wrapperType === 'podcastEpisode');
+        let matched = null;
+
+        if (episodeId) {
+          matched = episodes.find(e => e.trackId === episodeId);
+        }
+
+        // Fallback to latest episode if specific ID wasn't matched
+        if (!matched && episodes.length > 0) {
+          matched = episodes[0];
+        }
+
+        if (!matched || !matched.episodeUrl) {
+          showError('Could not resolve MP3 media stream for this episode.');
+          return;
+        }
+
+        // 4. Render details
+        artwork.src = matched.artworkUrl160 || matched.artworkUrl600 || '';
+        trackTitle.innerText = matched.trackName;
+        releaseDate.innerText = `Released: ${new Date(matched.releaseDate).toLocaleDateString()}`;
+        audioPreview.src = matched.episodeUrl;
+        
+        // Configure download action
+        downloadLink.href = matched.episodeUrl;
+        downloadLink.setAttribute('download', `${matched.trackName.replace(/[/\\?%*:|"<>]/g, '_')}.mp3`);
+
+        resultBox.style.display = 'block';
+        fetchBtn.disabled = false;
+        fetchBtn.innerText = 'Resolve Audio Stream';
+      };
+
+      const script = document.createElement('script');
+      script.id = callbackName;
+      script.src = apiUrl;
+      script.onerror = () => showError('Failed to contact Apple catalog service. Check network.');
+      document.body.appendChild(script);
+    });
+  </script>
+</body>
+</html>

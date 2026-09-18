@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Crocodile Who Didn't Like Water</title>
+  <title>Interactive Storybook Reader</title>
 
   <!-- StPageFlip Engine -->
   <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
@@ -27,6 +27,52 @@
       color: #fff;
     }
 
+    /* Top Navigation Bar */
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 100;
+    }
+
+    .top-bar h1 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 60%;
+    }
+
+    .btn-shelf {
+      background: #334155;
+      color: #f8fafc;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 0.45rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: background 0.2s;
+    }
+
+    .btn-shelf:hover {
+      background: #475569;
+    }
+
     /* Flipbook Viewport */
     .stage-wrapper {
       position: relative;
@@ -34,32 +80,30 @@
       justify-content: center;
       align-items: center;
       width: 100%;
-      height: 82vh;
+      height: 78vh;
+      margin-top: 40px;
     }
 
     .flipbook-container {
       transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
-    /* Front Cover: Center single leaf, mask left canvas leaf */
     .flipbook-container.cover-front {
       transform: translateX(-25%);
       clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
     }
 
-    /* Back Cover: Center single leaf, mask right canvas leaf */
     .flipbook-container.cover-back {
       transform: translateX(25%);
       clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
     }
 
-    /* Open Spreads: Seamless display across spine */
     .flipbook-container.spread-open {
       transform: translateX(0);
       clip-path: none;
     }
 
-    /* Controls Bar */
+    /* Floating Controls Bar */
     .controls {
       position: fixed;
       bottom: 24px;
@@ -72,10 +116,10 @@
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.12);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-      z-index: 1000;
+      z-index: 100;
     }
 
-    button {
+    button.ctrl-btn {
       background: #4f46e5;
       color: #ffffff;
       border: none;
@@ -90,11 +134,11 @@
       transition: background-color 0.2s, transform 0.1s;
     }
 
-    button:hover {
+    button.ctrl-btn:hover {
       background: #4338ca;
     }
 
-    button:active {
+    button.ctrl-btn:active {
       transform: scale(0.96);
     }
 
@@ -112,11 +156,140 @@
       font-size: 0.75rem;
       margin-top: 2px;
     }
+
+    /* Bookshelf Modal / Overlay */
+    .shelf-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .shelf-overlay.open {
+      display: flex;
+    }
+
+    .shelf-modal {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 1.25rem;
+      width: 100%;
+      max-width: 820px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 2rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .shelf-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .shelf-header h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+
+    .shelf-close {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.2rem 0.5rem;
+      line-height: 1;
+    }
+
+    .shelf-close:hover {
+      color: #fff;
+    }
+
+    .book-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .book-card {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 0.75rem;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .book-card:hover {
+      transform: translateY(-4px);
+      border-color: #6366f1;
+      box-shadow: 0 12px 24px rgba(99, 102, 241, 0.2);
+    }
+
+    .book-card.active {
+      border-color: #4f46e5;
+      ring: 2px solid #4f46e5;
+    }
+
+    .book-thumb {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background: #1e1e24;
+    }
+
+    .book-info {
+      padding: 1rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .book-info h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      line-height: 1.3;
+      margin-bottom: 0.35rem;
+    }
+
+    .book-info p {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-bottom: 0.75rem;
+    }
+
+    .book-badge {
+      font-size: 0.7rem;
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      align-self: flex-start;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Book Viewport -->
+  <!-- Top Header -->
+  <header class="top-bar">
+    <h1 id="header-book-title">The Crocodile Who Didn't Like Water</h1>
+    <div style="display:flex; gap:0.5rem; align-items:center;">
+      <a href="download.html" style="color:#94a3b8; font-size:0.8rem; text-decoration:none; margin-right:0.5rem;">📥 MP3 Tool</a>
+      <button id="btn-open-shelf" class="btn-shelf">📚 Bookshelf</button>
+    </div>
+  </header>
+
+  <!-- Flipbook Stage -->
   <div class="stage-wrapper">
     <div id="flipbook-wrapper" class="flipbook-container cover-front">
       <div id="flipbook"></div>
@@ -126,42 +299,88 @@
   <!-- Audio Element -->
   <audio id="soundtrack" preload="auto"></audio>
 
-  <!-- Controls -->
+  <!-- Controls Bar -->
   <div class="controls">
-    <button id="btn-prev">‹ Prev</button>
-    <button id="btn-play">▶ Play Story</button>
-    <button id="btn-next">Next ›</button>
+    <button id="btn-prev" class="ctrl-btn">‹ Prev</button>
+    <button id="btn-play" class="ctrl-btn">▶ Play Story</button>
+    <button id="btn-next" class="ctrl-btn">Next ›</button>
     <div class="status" id="page-counter">
       <span id="page-title">Front Cover</span>
       <small id="audio-time">0:00 / 3:08</small>
     </div>
   </div>
 
-  <script>
-    const TOTAL_PAGES = 31; // page-0.webp through page-30.webp
-    const PAGES_DIR = 'pages';
+  <!-- Bookshelf Modal -->
+  <div id="shelf-modal" class="shelf-overlay">
+    <div class="shelf-modal">
+      <div class="shelf-header">
+        <h2>Select a Storybook</h2>
+        <button id="btn-close-shelf" class="shelf-close">&times;</button>
+      </div>
+      <div class="book-grid" id="book-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
 
-    // Narration cue points mapped to 31 pages / spreads
-    const cuePoints = [
-      { pageIndex: 0,  startTime: 0.0,   endTime: 13.0,  title: "Front Cover" },
-      { pageIndex: 1,  startTime: 13.0,  endTime: 21.5,  title: "Endpaper" },
-      { pageIndex: 3,  startTime: 21.5,  endTime: 27.5,  title: "Once Upon a Time" },
-      { pageIndex: 5,  startTime: 27.5,  endTime: 33.0,  title: "Didn't Like Water" },
-      { pageIndex: 7,  startTime: 33.0,  endTime: 41.5,  title: "Swim Club" },
-      { pageIndex: 9,  startTime: 41.5,  endTime: 52.0,  title: "Climbing Trees" },
-      { pageIndex: 11, startTime: 52.0,  endTime: 64.5,  title: "The Tooth Fairy" },
-      { pageIndex: 13, startTime: 64.5,  endTime: 72.5,  title: "Can't Play Ball" },
-      { pageIndex: 15, startTime: 72.5,  endTime: 80.5,  title: "The Diving Ladder" },
-      { pageIndex: 17, startTime: 80.5,  endTime: 92.5,  title: "One, Two, Three..." },
-      { pageIndex: 19, startTime: 92.5,  endTime: 107.0, title: "Splosh! Glug! Help!" },
-      { pageIndex: 21, startTime: 107.0, endTime: 125.5, title: "The Tickle Grows" },
-      { pageIndex: 23, startTime: 125.5, endTime: 130.5, title: "...OOOOO! (Fire!)" },
-      { pageIndex: 25, startTime: 130.5, endTime: 144.0, title: "He Was a Dragon!" },
-      { pageIndex: 27, startTime: 144.0, endTime: 155.0, title: "Born to Fly" },
-      { pageIndex: 29, startTime: 155.0, endTime: 168.0, title: "Bedtime Outro" },
-      { pageIndex: 30, startTime: 168.0, endTime: 999.0, title: "Back Cover" }
+  <script>
+    // Storybook Catalog Manifest
+    const STORY_CATALOG = [
+      {
+        id: "crocodile",
+        title: "The Crocodile Who Didn't Like Water",
+        author: "Gemma Merino",
+        narrator: "Charlie Condou (CBeebies)",
+        baseDir: "pages", // Or "books/crocodile/pages"
+        audioUrl: "soundtrack.mp3",
+        totalPages: 31,
+        coverImage: "pages/page-0.webp?v=2",
+        cuePoints: [
+          { pageIndex: 0,  startTime: 0.0,   endTime: 13.0,  title: "Front Cover" },
+          { pageIndex: 1,  startTime: 13.0,  endTime: 21.5,  title: "Endpaper" },
+          { pageIndex: 3,  startTime: 21.5,  endTime: 27.5,  title: "Once Upon a Time" },
+          { pageIndex: 5,  startTime: 27.5,  endTime: 33.0,  title: "Didn't Like Water" },
+          { pageIndex: 7,  startTime: 33.0,  endTime: 41.5,  title: "Swim Club" },
+          { pageIndex: 9,  startTime: 41.5,  endTime: 52.0,  title: "Climbing Trees" },
+          { pageIndex: 11, startTime: 52.0,  endTime: 64.5,  title: "The Tooth Fairy" },
+          { pageIndex: 13, startTime: 64.5,  endTime: 72.5,  title: "Can't Play Ball" },
+          { pageIndex: 15, startTime: 72.5,  endTime: 80.5,  title: "The Diving Ladder" },
+          { pageIndex: 17, startTime: 80.5,  endTime: 92.5,  title: "One, Two, Three..." },
+          { pageIndex: 19, startTime: 92.5,  endTime: 107.0, title: "Splosh! Glug! Help!" },
+          { pageIndex: 21, startTime: 107.0, endTime: 125.5, title: "The Tickle Grows" },
+          { pageIndex: 23, startTime: 125.5, endTime: 130.5, title: "...OOOOO! (Fire!)" },
+          { pageIndex: 25, startTime: 130.5, endTime: 144.0, title: "He Was a Dragon!" },
+          { pageIndex: 27, startTime: 144.0, endTime: 155.0, title: "Born to Fly" },
+          { pageIndex: 29, startTime: 155.0, endTime: 168.0, title: "Bedtime Outro" },
+          { pageIndex: 30, startTime: 168.0, endTime: 999.0, title: "Back Cover" }
+        ]
+      },
+      {
+        id: "piggy",
+        title: "小豬上街買東西 (兒童粵語故事)",
+        author: "增田裕子 / 西村敏雄",
+        narrator: "八爪魚講故事",
+        baseDir: "books/piggy/pages",
+        audioUrl: "books/piggy/soundtrack.mp3",
+        totalPages: 34,
+        coverImage: "books/piggy/pages/page-0.webp",
+        cuePoints: [
+          { pageIndex: 0,  startTime: 0.0,   endTime: 15.0,  title: "封面 (Cover)" },
+          { pageIndex: 1,  startTime: 15.0,  endTime: 30.0,  title: "小豬阿胖出發" },
+          { pageIndex: 3,  startTime: 30.0,  endTime: 60.0,  title: "去超市的路上" },
+          { pageIndex: 5,  startTime: 60.0,  endTime: 90.0,  title: "遇見朋友" },
+          { pageIndex: 33, startTime: 450.0, endTime: 999.0, title: "封底 (Back Cover)" }
+        ]
+      }
     ];
 
+    let currentBookIndex = 0;
+    let pageFlip = null;
+    let isAudioTurning = false;
+    let isUserSeeking = false;
+
+    // DOM Elements
+    const headerTitle = document.getElementById('header-book-title');
     const bookContainer = document.getElementById('flipbook');
     const stageWrapper = document.getElementById('flipbook-wrapper');
     const audio = document.getElementById('soundtrack');
@@ -171,25 +390,34 @@
     const pageTitle = document.getElementById('page-title');
     const audioTime = document.getElementById('audio-time');
 
-    let isAudioTurning = false;
-    let isUserSeeking = false;
+    // Bookshelf Elements
+    const shelfModal = document.getElementById('shelf-modal');
+    const openShelfBtn = document.getElementById('btn-open-shelf');
+    const closeShelfBtn = document.getElementById('btn-close-shelf');
+    const bookGrid = document.getElementById('book-grid');
 
-    // Helper: Map single page index to its two-page spread root
+    function getActiveBook() {
+      return STORY_CATALOG[currentBookIndex];
+    }
+
     function getSpreadIndex(page) {
+      const total = getActiveBook().totalPages;
       if (page <= 0) return 0;
-      if (page >= TOTAL_PAGES - 1) return TOTAL_PAGES - 1;
+      if (page >= total - 1) return total - 1;
       return page % 2 === 1 ? page : page - 1;
     }
 
     function getCueForSpread(spreadIdx) {
-      return cuePoints.find(c => c.pageIndex === spreadIdx) || cuePoints[0];
+      const book = getActiveBook();
+      return book.cuePoints.find(c => c.pageIndex === spreadIdx) || book.cuePoints[0];
     }
 
     function getCueForTime(time) {
-      let matched = cuePoints[0];
-      for (let i = 0; i < cuePoints.length; i++) {
-        if (time >= cuePoints[i].startTime) {
-          matched = cuePoints[i];
+      const book = getActiveBook();
+      let matched = book.cuePoints[0];
+      for (let i = 0; i < book.cuePoints.length; i++) {
+        if (time >= book.cuePoints[i].startTime) {
+          matched = book.cuePoints[i];
         } else {
           break;
         }
@@ -203,39 +431,6 @@
       return `${m}:${s < 10 ? '0' : ''}${s}`;
     }
 
-    // Preload audio into memory blob for instant seeking
-    fetch('soundtrack.mp3')
-      .then(res => res.blob())
-      .then(blob => {
-        audio.src = URL.createObjectURL(blob);
-      })
-      .catch(() => {
-        audio.src = 'soundtrack.mp3';
-      });
-
-    // Initialize PageFlip
-    const pageFlip = new St.PageFlip(bookContainer, {
-      width: 480,
-      height: 640,
-      size: "stretch",
-      minWidth: 350,
-      maxWidth: 650,
-      minHeight: 450,
-      maxHeight: 880,
-      showCover: true,
-      drawShadow: true,
-      flippingTime: 700,
-      usePortrait: false,
-      maxShadowOpacity: 0.35
-    });
-
-    // Load page-0.webp through page-30.webp with cache-busting
-    const pageImages = [];
-    for (let i = 0; i < TOTAL_PAGES; i++) {
-      pageImages.push(`${PAGES_DIR}/page-${i}.webp?v=2`);
-    }
-    pageFlip.loadFromImages(pageImages);
-
     function applyCoverAlignment(pageIndex) {
       const spread = getSpreadIndex(pageIndex);
       const cue = getCueForSpread(spread);
@@ -245,60 +440,110 @@
 
       if (spread === 0) {
         stageWrapper.classList.add('cover-front');
-      } else if (spread >= TOTAL_PAGES - 1) {
+      } else if (spread >= getActiveBook().totalPages - 1) {
         stageWrapper.classList.add('cover-back');
       } else {
         stageWrapper.classList.add('spread-open');
       }
     }
 
-    pageFlip.on('changeState', (e) => {
-      if (e.data === 'flipping') {
-        stageWrapper.classList.remove('cover-front', 'cover-back');
-        stageWrapper.classList.add('spread-open');
-      } else if (e.data === 'read') {
-        isAudioTurning = false;
-        applyCoverAlignment(pageFlip.getCurrentPageIndex());
+    // Engine Lifecycle: Destroy and Mount Flipbook
+    function loadBook(index) {
+      currentBookIndex = index;
+      const book = getActiveBook();
+
+      headerTitle.innerText = book.title;
+      pageTitle.innerText = book.cuePoints[0].title;
+      audioTime.innerText = `0:00 / 0:00`;
+
+      // Reset Audio
+      audio.pause();
+      playBtn.innerText = '▶ Play Story';
+      audio.src = book.audioUrl;
+      audio.load();
+
+      // Tear down previous instance
+      if (pageFlip) {
+        try {
+          pageFlip.destroy();
+        } catch (e) {
+          console.warn("Destroy warning:", e);
+        }
       }
-    });
+      bookContainer.innerHTML = '';
 
-    // Audio -> Page Flip Sync
+      // Initialize StPageFlip
+      pageFlip = new St.PageFlip(bookContainer, {
+        width: 480,
+        height: 640,
+        size: "stretch",
+        minWidth: 350,
+        maxWidth: 650,
+        minHeight: 450,
+        maxHeight: 880,
+        showCover: true,
+        drawShadow: true,
+        flippingTime: 700,
+        usePortrait: false,
+        maxShadowOpacity: 0.35
+      });
+
+      // Populate pages
+      const pageImages = [];
+      for (let i = 0; i < book.totalPages; i++) {
+        pageImages.push(`${book.baseDir}/page-${i}.webp?v=2`);
+      }
+      pageFlip.loadFromImages(pageImages);
+
+      // Rebind state events
+      pageFlip.on('changeState', (e) => {
+        if (e.data === 'flipping') {
+          stageWrapper.classList.remove('cover-front', 'cover-back');
+          stageWrapper.classList.add('spread-open');
+        } else if (e.data === 'read') {
+          isAudioTurning = false;
+          applyCoverAlignment(pageFlip.getCurrentPageIndex());
+        }
+      });
+
+      pageFlip.on('flip', (e) => {
+        const spread = getSpreadIndex(e.data);
+        applyCoverAlignment(spread);
+
+        if (!isAudioTurning) {
+          const cue = getCueForSpread(spread);
+          isUserSeeking = true;
+          audio.currentTime = cue.startTime;
+          setTimeout(() => { isUserSeeking = false; }, 300);
+        }
+      });
+
+      applyCoverAlignment(0);
+      renderBookshelf();
+    }
+
+    // Real-Time Audio Synchronization
     audio.addEventListener('timeupdate', () => {
-      audioTime.innerText = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration || 188)}`;
-
+      audioTime.innerText = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration || 0)}`;
       const currentCue = getCueForTime(audio.currentTime);
       pageTitle.innerText = currentCue.title;
 
-      if (audio.paused || isUserSeeking) return;
+      if (audio.paused || isUserSeeking || !pageFlip) return;
 
       const currentVisibleSpread = getSpreadIndex(pageFlip.getCurrentPageIndex());
-
       if (currentVisibleSpread !== currentCue.pageIndex && !isAudioTurning) {
         isAudioTurning = true;
         pageFlip.flip(currentCue.pageIndex);
       }
     });
 
-    // Manual Turn -> Audio Seek Sync
-    pageFlip.on('flip', (e) => {
-      const newPageIndex = e.data;
-      const spread = getSpreadIndex(newPageIndex);
-      applyCoverAlignment(spread);
-
-      if (!isAudioTurning) {
-        const cue = getCueForSpread(spread);
-        isUserSeeking = true;
-        audio.currentTime = cue.startTime;
-
-        setTimeout(() => {
-          isUserSeeking = false;
-        }, 300);
-      }
+    audio.addEventListener('ended', () => {
+      playBtn.innerText = '▶ Play Story';
     });
 
-    // Navigation Controls
-    prevBtn.addEventListener('click', () => pageFlip.flipPrev());
-    nextBtn.addEventListener('click', () => pageFlip.flipNext());
+    // Control Handlers
+    prevBtn.addEventListener('click', () => pageFlip && pageFlip.flipPrev());
+    nextBtn.addEventListener('click', () => pageFlip && pageFlip.flipNext());
 
     playBtn.addEventListener('click', () => {
       if (audio.paused) {
@@ -308,7 +553,6 @@
         if (audio.currentTime < cue.startTime || audio.currentTime >= cue.endTime) {
           audio.currentTime = cue.startTime;
         }
-
         audio.play();
         playBtn.innerText = '❚❚ Pause';
       } else {
@@ -317,9 +561,44 @@
       }
     });
 
-    audio.addEventListener('ended', () => {
-      playBtn.innerText = '▶ Play Story';
+    // Bookshelf Modal Handlers
+    function renderBookshelf() {
+      bookGrid.innerHTML = '';
+      STORY_CATALOG.forEach((book, idx) => {
+        const card = document.createElement('div');
+        card.className = `book-card ${idx === currentBookIndex ? 'active' : ''}`;
+        card.innerHTML = `
+          <img class="book-thumb" src="${book.coverImage}" alt="${book.title}" onerror="this.src='pages/page-0.webp'" />
+          <div class="book-info">
+            <div>
+              <h3>${book.title}</h3>
+              <p>${book.author} · ${book.narrator}</p>
+            </div>
+            <span class="book-badge">${book.totalPages} Pages</span>
+          </div>
+        `;
+        card.addEventListener('click', () => {
+          loadBook(idx);
+          shelfModal.classList.remove('open');
+        });
+        bookGrid.appendChild(card);
+      });
+    }
+
+    openShelfBtn.addEventListener('click', () => {
+      shelfModal.classList.add('open');
     });
+
+    closeShelfBtn.addEventListener('click', () => {
+      shelfModal.classList.remove('open');
+    });
+
+    shelfModal.addEventListener('click', (e) => {
+      if (e.target === shelfModal) shelfModal.classList.remove('open');
+    });
+
+    // Initial Mount
+    loadBook(0);
   </script>
 </body>
 </html>
