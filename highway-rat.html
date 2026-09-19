@@ -27,7 +27,7 @@
       color: #fff;
     }
 
-    /* Top Navigation: MP3 Tool Removed */
+    /* Top Navigation */
     .top-bar {
       position: fixed;
       top: 0;
@@ -145,7 +145,7 @@
   <header class="top-bar">
     <a href="index.html" class="btn-back">← Bookshelf</a>
     <h1>The Highway Rat</h1>
-    <div style="width: 80px;"></div> <!-- Spacer for visual balance -->
+    <div style="width: 80px;"></div>
   </header>
 
   <div class="stage-wrapper">
@@ -227,16 +227,16 @@
       return `${m}:${s < 10 ? '0' : ''}${s}`;
     }
 
-    // Inspect natural image dimensions before mounting engine to prevent distortion
+    // Inspect natural image dimensions before mounting engine to prevent squishing
     const probe = new Image();
-    probe.src = `${PAGES_DIR}/page-1.webp?v=4`;
+    probe.src = `${PAGES_DIR}/page-1.webp?v=5`;
 
     probe.onload = () => {
       initFlipBook(probe.naturalWidth || 560, probe.naturalHeight || 500);
     };
 
     probe.onerror = () => {
-      initFlipBook(560, 500); // Standard square/landscape picture book proportions
+      initFlipBook(560, 500);
     };
 
     function initFlipBook(pageW, pageH) {
@@ -257,7 +257,7 @@
 
       const pageImages = [];
       for (let i = 0; i < TOTAL_PAGES; i++) {
-        pageImages.push(`${PAGES_DIR}/page-${i}.webp?v=4`);
+        pageImages.push(`${PAGES_DIR}/page-${i}.webp?v=5`);
       }
       pageFlip.loadFromImages(pageImages);
 
