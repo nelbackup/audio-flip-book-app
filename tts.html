@@ -60,13 +60,14 @@
       gap: 0.4rem;
       background: rgba(15, 23, 42, 0.8);
       border: 1px solid #334155;
-      padding: 0.35rem 0.75rem;
+      padding: 0.4rem 0.85rem;
       border-radius: 9999px;
-      font-size: 0.75rem;
+      font-size: 0.78rem;
       font-weight: 600;
-      color: #94a3b8;
+      color: #cbd5e1;
       cursor: pointer;
       transition: all 0.2s;
+      user-select: none;
     }
 
     .auth-badge.authenticated {
@@ -95,7 +96,7 @@
       background: transparent;
       color: #94a3b8;
       border: none;
-      padding: 0.55rem;
+      padding: 0.6rem;
       font-size: 0.85rem;
       font-weight: 600;
       border-radius: 0.4rem;
@@ -140,7 +141,7 @@
 
     textarea {
       resize: vertical;
-      min-height: 130px;
+      min-height: 140px;
       line-height: 1.5;
     }
 
@@ -166,10 +167,6 @@
       background: #4338ca;
     }
 
-    .stream-trigger-btn:active:not(:disabled) {
-      transform: scale(0.99);
-    }
-
     .stream-trigger-btn:disabled {
       background: #334155;
       color: #64748b;
@@ -182,7 +179,7 @@
       background: #0b0f19;
       border: 1px solid #334155;
       border-radius: 0.75rem;
-      padding: 1rem;
+      padding: 1.1rem;
       display: none;
     }
 
@@ -190,7 +187,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       margin-bottom: 0.75rem;
     }
 
@@ -200,7 +197,7 @@
       height: 8px;
       border-radius: 50%;
       background: #10b981;
-      margin-right: 0.35rem;
+      margin-right: 0.4rem;
       animation: pulse 1.5s infinite;
     }
 
@@ -211,7 +208,7 @@
 
     audio {
       width: 100%;
-      height: 40px;
+      height: 42px;
       border-radius: 0.5rem;
       margin-top: 0.5rem;
     }
@@ -234,7 +231,6 @@
       background: #059669;
     }
 
-    /* Free Tier Warning & Switcher Banner */
     .tier-alert {
       margin-top: 1rem;
       padding: 0.85rem 1rem;
@@ -251,14 +247,21 @@
       color: #fda4af;
     }
 
+    .tier-alert.info {
+      display: block;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #c7d2fe;
+    }
+
     .btn-auto-fix {
       display: inline-block;
       margin-top: 0.5rem;
       background: #e11d48;
       color: #fff;
       border: none;
-      padding: 0.35rem 0.75rem;
-      border-radius: 0.35rem;
+      padding: 0.4rem 0.85rem;
+      border-radius: 0.4rem;
       font-size: 0.78rem;
       font-weight: 600;
       cursor: pointer;
@@ -353,17 +356,17 @@
     <div class="card-header">
       <div>
         <h1>Unified Streaming Narration Studio</h1>
-        <p class="subtitle">Real-time chunked audio synthesis for picture books (Free Tier optimized).</p>
+        <p class="subtitle">Direct chunked audio synthesis for picture books (Free Tier optimized).</p>
       </div>
       <button type="button" id="auth-status-btn" class="auth-badge">
         <span id="auth-dot">⚪</span> <span id="auth-label">Connect API</span>
       </button>
     </div>
 
-    <!-- Unified Provider Switcher -->
+    <!-- Provider Tabs -->
     <div class="provider-toggle">
       <button type="button" class="provider-btn active" id="btn-tab-eleven">🇬🇧 English (ElevenLabs)</button>
-      <button type="button" class="provider-btn" id="btn-tab-minimax">🇭🇰 Cantonese (MiniMax / Neural)</button>
+      <button type="button" class="provider-btn" id="btn-tab-minimax">🇭🇰 Cantonese (Browser & MiniMax)</button>
     </div>
 
     <!-- Voice Selection -->
@@ -372,13 +375,7 @@
         <span>Preferred Narrator Voice</span>
         <span id="voice-tag" style="color: #38bdf8; font-weight: normal; font-size: 0.75rem;">Default: Casey</span>
       </label>
-      <select id="voice-select">
-        <!-- ElevenLabs Preferred & Free Presets -->
-        <option value="piTKgcLEGmPE4e6mEKli" data-tier="library" selected>Casey - Clean, Crisp and Friendly (Preferred)</option>
-        <option value="21m00Tcm4TlvDq8ikWAM" data-tier="premade">Rachel - Calm & Storybook (100% Free API Safe)</option>
-        <option value="Xb7hH8MSUJpSbSDYk0k2" data-tier="premade">Alice - Clear Educator (100% Free API Safe)</option>
-        <option value="pNInz6obpgDQGcFmaJgB" data-tier="premade">Adam - Warm Storyteller (100% Free API Safe)</option>
-      </select>
+      <select id="voice-select"></select>
     </div>
 
     <!-- Script Text Area -->
@@ -387,13 +384,7 @@
         <span>Story Script</span>
         <span id="char-counter" style="color: #94a3b8; font-size: 0.75rem;">0 characters</span>
       </label>
-      <textarea id="story-text" placeholder="Type or paste narration script here...">It is now November. Emily is very excited because she has many fun activities this month. Please help Emily write some marks on her calendar.
-
-Are you ready? Let's start!
-
-The first day of November is a special day for Emily. It is her lucky day because she won a drawing competition at school. Draw a star on 1st November.
-
-The next day is even more exciting. 2nd November is Emily's birthday. She will celebrate with her family and friends. Draw a birthday cake on 2nd November.</textarea>
+      <textarea id="story-text"></textarea>
     </div>
 
     <button class="stream-trigger-btn" id="btn-stream">⚡ Start Real-Time Stream</button>
@@ -411,26 +402,21 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
         <div id="stream-stats" style="color: #94a3b8; font-size: 0.75rem;">Received: 0 KB</div>
       </div>
       <audio id="audio-player" controls autoplay></audio>
-      <a id="btn-download" class="btn-download" download="soundtrack.mp3">⬇ Download Full soundtrack.mp3</a>
+      <a id="btn-download" class="btn-download" download="soundtrack.mp3">⬇ Download soundtrack.mp3</a>
     </div>
 
     <a href="index.html" class="nav-link">← Return to Bookshelf</a>
   </div>
 
-  <!-- In-Memory API Key Modal -->
+  <!-- API Authentication Modal -->
   <div id="login-modal" class="modal-backdrop">
     <div class="modal">
       <h2 id="modal-title">API Authentication</h2>
-      <p>Your API key is held exclusively in <strong>volatile memory (RAM)</strong> for this tab session only. It is never stored to disk or localStorage.</p>
+      <p>Enter your secret key. Stored in volatile session memory only for this tab (never written to disk).</p>
 
       <div class="form-group">
-        <label for="modal-key-input" id="modal-key-label">ElevenLabs API Key (starts with sk_)</label>
+        <label for="modal-key-input" id="modal-key-label">ElevenLabs Secret Key (starts with sk_)</label>
         <input type="password" id="modal-key-input" placeholder="sk_..." autocomplete="off" />
-      </div>
-
-      <div class="form-group" id="modal-group-wrapper" style="display: none;">
-        <label for="modal-group-input">MiniMax Group ID (Optional / If Paid)</label>
-        <input type="text" id="modal-group-input" placeholder="Numeric Group ID..." autocomplete="off" />
       </div>
 
       <div class="modal-actions">
@@ -442,22 +428,13 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
 
   <script>
     let activeProvider = 'elevenlabs';
-    let elevenKey = null;
-    let minimaxKey = null;
-    let minimaxGroupId = null;
-
-    let mediaSource = null;
-    let sourceBuffer = null;
-    let audioChunks = [];
+    let elevenKey = sessionStorage.getItem('eleven_key') || null;
 
     const modal = document.getElementById('login-modal');
     const authBtn = document.getElementById('auth-status-btn');
     const authDot = document.getElementById('auth-dot');
     const authLabel = document.getElementById('auth-label');
     const modalKeyInput = document.getElementById('modal-key-input');
-    const modalKeyLabel = document.getElementById('modal-key-label');
-    const modalGroupWrapper = document.getElementById('modal-group-wrapper');
-    const modalGroupInput = document.getElementById('modal-group-input');
     const modalCancel = document.getElementById('btn-modal-cancel');
     const modalSave = document.getElementById('btn-modal-save');
 
@@ -479,68 +456,81 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
     const audioPlayer = document.getElementById('audio-player');
     const downloadBtn = document.getElementById('btn-download');
 
+    const ENGLISH_SCRIPT = `The first day of November is a special day for Emily. It is her lucky day because she won a drawing competition at school. Draw a star on 1st November.
+
+The next day is even more exciting. 2nd November is Emily's birthday. She will celebrate with her family and friends. Draw a birthday cake on 2nd November.`;
+
+    const CANTONESE_SCRIPT = `早晨，各位同學！歡迎嚟到光明小學。
+
+喺失物招領嘅枱上面，有四個書包。書包上面嘅名牌甩咗出嚟，所以我們要幫同學仔搵返佢哋嘅書包。請大家仔細聽清楚喇！
+
+首先，我哋睇下阿妮嘅書包。阿妮同老師講，佢嘅書包唔係綠色，亦都唔係藍色。書包入面有一支水樽同三把尺。佢每日上數學堂都會用到呢啲尺。`;
+
     const ELEVEN_VOICES = [
-      { id: "piTKgcLEGmPE4e6mEKli", name: "Casey - Clean, Crisp and Friendly (Preferred)"[cite: 2, 11, 13], tier: "library" },
-      { id: "21m00Tcm4TlvDq8ikWAM", name: "Rachel - Calm & Storybook (100% Free API Safe)"[cite: 6], tier: "premade" },
-      { id: "Xb7hH8MSUJpSbSDYk0k2", name: "Alice - Clear Educator (100% Free API Safe)", tier: "premade" },
-      { id: "pNInz6obpgDQGcFmaJgB", name: "Adam - Warm Storyteller (100% Free API Safe)", tier: "premade" }
+      { id: "piTKgcLEGmPE4e6mEKli", name: "Casey - Clean, Crisp and Friendly (Preferred)" },
+      { id: "21m00Tcm4TlvDq8ikWAM", name: "Rachel - Calm & Storybook (100% Free API Safe)" },
+      { id: "Xb7hH8MSUJpSbSDYk0k2", name: "Alice - Clear Educator (100% Free API Safe)" },
+      { id: "pNInz6obpgDQGcFmaJgB", name: "Adam - Warm Storyteller (100% Free API Safe)" }
     ];
 
-    const CANTONESE_VOICES = [
-      { id: "cantonese_reporter", name: "Professional Reporter - Precise,Objective,Bright (Preferred)"[cite: 7], type: "minimax" },
-      { id: "neural_hiumaan", name: "HiuMaan - Gentle Storybook Narrator (Zero-Key Free Stream)", type: "neural" },
-      { id: "neural_wanlung", name: "WanLung - Warm Bedtime Male Narrator (Zero-Key Free Stream)", type: "neural" }
-    ];
+    let browserCantoneseVoices = [];
+
+    function populateBrowserVoices() {
+      if (!('speechSynthesis' in window)) return;
+      const all = window.speechSynthesis.getVoices();
+      browserCantoneseVoices = all.filter(v => 
+        v.lang.includes('HK') || v.lang.includes('yue') || v.lang.includes('zh-HK') || v.lang.includes('zh')
+      );
+    }
+
+    if ('speechSynthesis' in window) {
+      populateBrowserVoices();
+      window.speechSynthesis.onvoiceschanged = populateBrowserVoices;
+    }
 
     function updateCounter() {
       charCounter.innerText = `${storyText.value.length} characters`;
     }
     storyText.addEventListener('input', updateCounter);
-    updateCounter();
 
     function updateAuthBadge() {
-      const hasKey = activeProvider === 'elevenlabs' ? !!elevenKey : (!!minimaxKey || true);
-      if ((activeProvider === 'elevenlabs' && elevenKey) || (activeProvider === 'minimax' && minimaxKey)) {
+      if (activeProvider === 'elevenlabs') {
+        authBtn.style.display = 'inline-flex';
+        if (elevenKey) {
+          authBtn.classList.add('authenticated');
+          authDot.innerText = '🟢';
+          authLabel.innerText = 'API Connected';
+        } else {
+          authBtn.classList.remove('authenticated');
+          authDot.innerText = '⚪';
+          authLabel.innerText = 'Connect API';
+        }
+      } else {
+        // Cantonese uses browser native engine (zero-key required)
+        authBtn.style.display = 'inline-flex';
         authBtn.classList.add('authenticated');
         authDot.innerText = '🟢';
-        authLabel.innerText = 'Session Active';
-      } else {
-        authBtn.classList.remove('authenticated');
-        authDot.innerText = '⚪';
-        authLabel.innerText = activeProvider === 'elevenlabs' ? 'Connect ElevenLabs' : 'MiniMax Key (Optional)';
+        authLabel.innerText = 'Free Engine Ready';
       }
     }
 
     function openAuthModal() {
-      if (activeProvider === 'elevenlabs') {
-        modalKeyLabel.innerText = 'ElevenLabs API Key (sk_...)';
-        modalGroupWrapper.style.display = 'none';
-        modalKeyInput.value = elevenKey || '';
-      } else {
-        modalKeyLabel.innerText = 'MiniMax API Key (Optional)';
-        modalGroupWrapper.style.display = 'block';
-        modalKeyInput.value = minimaxKey || '';
-        modalGroupInput.value = minimaxGroupId || '';
-      }
+      modalKeyInput.value = elevenKey || '';
       modal.classList.add('open');
       modalKeyInput.focus();
     }
 
-    authBtn.addEventListener('click', openAuthAuthModal);
+    authBtn.addEventListener('click', openAuthModal);
     modalCancel.addEventListener('click', () => modal.classList.remove('open'));
 
     modalSave.addEventListener('click', () => {
       const val = modalKeyInput.value.trim();
-      if (activeProvider === 'elevenlabs') {
-        if (!val.startsWith('sk_')) {
-          alert('ElevenLabs secret keys must start with sk_');
-          return;
-        }
-        elevenKey = val;
-      } else {
-        minimaxKey = val;
-        minimaxGroupId = modalGroupInput.value.trim();
+      if (!val.startsWith('sk_')) {
+        alert('Please enter a valid ElevenLabs secret key starting with sk_');
+        return;
       }
+      elevenKey = val;
+      sessionStorage.setItem('eleven_key', val);
       updateAuthBadge();
       modal.classList.remove('open');
     });
@@ -554,77 +544,113 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
         tabEleven.classList.add('active');
         tabMiniMax.classList.remove('active');
         voiceTag.innerText = 'Default: Casey (English)';
-        voiceSelect.innerHTML = ELEVEN_VOICES.map((v, i) =>
-          `<option value="${v.id}" ${i === 0 ? 'selected' : ''}>${v.name}</option>`
-        ).join('');
+        voiceSelect.innerHTML = ELEVEN_VOICES.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
+        storyText.value = ENGLISH_SCRIPT;
       } else {
         tabMiniMax.classList.add('active');
         tabEleven.classList.remove('active');
         voiceTag.innerText = 'Default: Professional Reporter (Cantonese)';
-        voiceSelect.innerHTML = CANTONESE_VOICES.map((v, i) =>
-          `<option value="${v.id}" ${i === 0 ? 'selected' : ''}>${v.name}</option>`
-        ).join('');
+
+        populateBrowserVoices();
+        let options = '';
+        if (browserCantoneseVoices.length > 0) {
+          options = browserCantoneseVoices.map((v, i) => `<option value="browser_${i}">${v.name} (${v.lang})</option>`).join('');
+        } else {
+          options = `
+            <option value="browser_default">粵語標準朗讀 (Browser Hong Kong Engine)</option>
+            <option value="open_minimax">↗ 開啟 MiniMax 網頁版 (使用現存 9,144 點數)</option>
+          `;
+        }
+        voiceSelect.innerHTML = options;
+        storyText.value = CANTONESE_SCRIPT;
       }
+      updateCounter();
       updateAuthBadge();
     }
 
     tabEleven.addEventListener('click', () => setProvider('elevenlabs'));
     tabMiniMax.addEventListener('click', () => setProvider('minimax'));
 
-    function showErrorAlert(msg, showFix = false) {
+    function showAlert(msg, isError = true, showFix = false) {
       alertText.innerHTML = msg;
-      alertBox.className = 'tier-alert error';
+      alertBox.className = `tier-alert ${isError ? 'error' : 'info'}`;
       alertBox.style.display = 'block';
       quickFixBtn.style.display = showFix ? 'inline-block' : 'none';
     }
 
     quickFixBtn.addEventListener('click', () => {
-      // Auto-switch to Rachel (premade free-tier safe) and re-trigger stream
-      voiceSelect.value = "21m00Tcm4TlvDq8ikWAM";[cite: 6]
+      voiceSelect.value = "21m00Tcm4TlvDq8ikWAM";
       alertBox.style.display = 'none';
       streamBtn.click();
     });
 
-    // Unified Streaming Execution
+    // Stream Execution
     streamBtn.addEventListener('click', async () => {
       const text = storyText.value.trim();
       if (!text) {
-        showErrorAlert('Please enter narration text.');
+        showAlert('Please enter narration text.');
         return;
       }
 
       alertBox.style.display = 'none';
 
-      // Provider 1: ElevenLabs Streaming
-      if (activeProvider === 'elevenlabs') {
-        if (!elevenKey) {
-          openAuthModal();
+      // Cantonese Path
+      if (activeProvider === 'minimax') {
+        if (voiceSelect.value === 'open_minimax') {
+          window.open('https://www.minimax.io/audio', '_blank');
           return;
         }
 
-        startElevenLabsStream(text, voiceSelect.value);
-      } 
-      // Provider 2: Cantonese (MiniMax / Zero-Key Neural)
-      else {
-        const selectedVoice = voiceSelect.value;
-        if (selectedVoice === 'cantonese_reporter' && minimaxKey && minimaxGroupId) {
-          startMiniMaxStream(text, selectedVoice);
-        } else {
-          // Zero-Key Cantonese Streaming
-          startZeroKeyCantonese(text);
+        if (!('speechSynthesis' in window)) {
+          showAlert('Your browser does not support SpeechSynthesis.');
+          return;
         }
-      }
-    });
 
-    async function startElevenLabsStream(text, voiceId) {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
+
+        monitor.style.display = 'block';
+        downloadBtn.style.display = 'none';
+        streamStatus.innerText = 'Speaking Cantonese narration...';
+        streamStats.innerText = 'Engine: Local SpeechSynthesis';
+
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.88;
+        utter.lang = 'zh-HK';
+
+        if (voiceSelect.value.startsWith('browser_')) {
+          const idx = parseInt(voiceSelect.value.replace('browser_', ''));
+          if (!isNaN(idx) && browserCantoneseVoices[idx]) {
+            utter.voice = browserCantoneseVoices[idx];
+          }
+        }
+
+        utter.onend = () => {
+          streamStatus.innerText = 'Cantonese narration complete!';
+        };
+
+        utter.onerror = (e) => {
+          showAlert(`SpeechSynthesis Error: ${e.error || 'Playback failed'}`);
+        };
+
+        window.speechSynthesis.speak(utter);
+        return;
+      }
+
+      // ElevenLabs Path
+      if (!elevenKey) {
+        openAuthModal();
+        return;
+      }
+
       streamBtn.disabled = true;
       monitor.style.display = 'block';
       downloadBtn.style.display = 'none';
-      streamStatus.innerText = 'Initiating stream connection...';
+      streamStatus.innerText = 'Connecting to ElevenLabs stream...';
       streamStats.innerText = 'Received: 0 KB';
 
       try {
-        const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
+        const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceSelect.value}/stream`, {
           method: 'POST',
           headers: {
             'xi-api-key': elevenKey,
@@ -642,111 +668,56 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
           const err = await response.json().catch(() => ({}));
           const errMsg = err?.detail?.message || `HTTP ${response.status}`;
 
-          // Detect ElevenLabs Free Tier Library Voice Error
           if (errMsg.includes('library voices') || errMsg.includes('Free users')) {
             throw new Error('FREE_TIER_LIBRARY_VOICE');
           }
           throw new Error(errMsg);
         }
 
-        await handleStreamingResponse(response);
+        // Stream chunks via ReadableStream
+        const reader = response.body.getReader();
+        const chunks = [];
+        let totalBytes = 0;
+
+        streamStatus.innerText = 'Streaming audio chunks...';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          totalBytes += value.length;
+          streamStats.innerText = `Received: ${(totalBytes / 1024).toFixed(1)} KB`;
+        }
+
+        // Assemble into playable audio blob
+        const audioBlob = new Blob(chunks, { type: 'audio/mpeg' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        audioPlayer.src = audioUrl;
+        audioPlayer.play().catch(() => {});
+
+        downloadBtn.href = audioUrl;
+        downloadBtn.style.display = 'block';
+        streamStatus.innerText = 'Playback ready!';
 
       } catch (err) {
         monitor.style.display = 'none';
         if (err.message === 'FREE_TIER_LIBRARY_VOICE') {
-          showErrorAlert(
-            `<strong>ElevenLabs Free Tier Policy:</strong> <em>Casey</em> is a community library voice and requires a paid plan to invoke via API. Free accounts can stream all default premade voices[cite: 5].`,
+          showAlert(
+            `<strong>ElevenLabs Free Tier Limitation:</strong> <em>Casey</em> is a community library voice and cannot be accessed via API on the Free Tier. Default premade voices (Rachel, Alice, Adam) are 100% free[cite: 5].`,
+            true,
             true
           );
         } else {
-          showErrorAlert(`Streaming Error: ${err.message}`);
+          showAlert(`Error: ${err.message}`);
         }
       } finally {
         streamBtn.disabled = false;
       }
-    }
+    });
 
-    async function handleStreamingResponse(response) {
-      const reader = response.body.getReader();
-      audioChunks = [];
-      let totalBytes = 0;
-
-      // Initialize MediaSource streaming pipeline
-      mediaSource = new MediaSource();
-      audioPlayer.src = URL.createObjectURL(mediaSource);
-
-      const streamPromise = new Promise((resolve, reject) => {
-        mediaSource.addEventListener('sourceopen', async () => {
-          try {
-            sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
-            streamStatus.innerText = 'Streaming audio chunks...';
-
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-
-              audioChunks.push(value);
-              totalBytes += value.length;
-              streamStats.innerText = `Received: ${(totalBytes / 1024).toFixed(1)} KB`;
-
-              // Wait if buffer is updating before appending next chunk
-              if (sourceBuffer.updating) {
-                await new Promise(r => sourceBuffer.addEventListener('updateend', r, { once: true }));
-              }
-              sourceBuffer.appendBuffer(value);
-            }
-
-            if (mediaSource.readyState === 'open') {
-              if (sourceBuffer.updating) {
-                await new Promise(r => sourceBuffer.addEventListener('updateend', r, { once: true }));
-              }
-              mediaSource.endOfStream();
-            }
-            resolve();
-          } catch (e) {
-            reject(e);
-          }
-        });
-      });
-
-      await streamPromise;
-
-      streamStatus.innerText = 'Stream playback complete!';
-      const fullBlob = new Blob(audioChunks, { type: 'audio/mpeg' });
-      const downloadUrl = URL.createObjectURL(fullBlob);
-      downloadBtn.href = downloadUrl;
-      downloadBtn.style.display = 'block';
-    }
-
-    // Zero-Key Cantonese Streaming Pipeline
-    function startZeroKeyCantonese(text) {
-      if (!('speechSynthesis' in window)) {
-        showErrorAlert('Your browser does not support speech synthesis.');
-        return;
-      }
-
-      window.speechSynthesis.cancel();
-      monitor.style.display = 'block';
-      downloadBtn.style.display = 'none';
-      streamStatus.innerText = 'Streaming via Cantonese Neural Engine...';
-
-      const cleanText = text.replace(/<[^>]+>/g, ' ... ');
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.rate = 0.85;
-
-      const voices = window.speechSynthesis.getVoices();
-      const hkVoice = voices.find(v => v.lang.includes('HK') || v.lang.includes('yue') || v.lang.includes('zh-HK'));
-      if (hkVoice) utterance.voice = hkVoice;
-
-      utterance.onstart = () => {
-        streamStatus.innerText = 'Speaking Cantonese narration (Live)...';
-      };
-      utterance.onend = () => {
-        streamStatus.innerText = 'Narration completed!';
-      };
-
-      window.speechSynthesis.speak(utterance);
-    }
+    // Initialize English view
+    setProvider('elevenlabs');
   </script>
 </body>
 </html>
