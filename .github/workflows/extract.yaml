@@ -19,36 +19,57 @@ on:
         options:
           - 'audio'
           - 'video'
-        default: 'audio'
+        default: 'video'
+
+permissions:
+  contents: write
 
 jobs:
   extract:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js (for yt-dlp JS runtime)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install FFmpeg and yt-dlp
+      - name: Install FFmpeg and latest yt-dlp
         run: |
-          sudo apt-get update && sudo apt-get install -y ffmpeg
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
           python -m pip install --upgrade pip yt-dlp
 
       - name: Create destination directory
         run: |
           mkdir -p "books/${{ inputs.target_folder }}"
 
+      - name: Prepare Cookies (if provided in secrets)
+        run: |
+          if [ -n "${{ secrets.YOUTUBE_COOKIES }}" ]; then
+            echo "${{ secrets.YOUTUBE_COOKIES }}" > cookies.txt
+            echo "COOKIE_FLAG=--cookies cookies.txt" >> $GITHUB_ENV
+          else
+            echo "COOKIE_FLAG=" >> $GITHUB_ENV
+          fi
+
       - name: Extract Audio (MP3)
         if: ${{ inputs.media_type == 'audio' }}
         run: |
           yt-dlp -x --audio-format mp3 --audio-quality 192K \
+            --extractor-args "youtube:player_client=android,web" \
+            --js-runtimes node \
+            $COOKIE_FLAG \
             -o "books/${{ inputs.target_folder }}/soundtrack.mp3" \
             "${{ inputs.youtube_url }}"
 
@@ -56,13 +77,25 @@ jobs:
         if: ${{ inputs.media_type == 'video' }}
         run: |
           yt-dlp -f "bv*[ext=mp4]+ba*[ext=m4a]/b[ext=mp4]/best" --merge-output-format mp4 \
+            --extractor-args "youtube:player_client=android,web" \
+            --js-runtimes node \
+            $COOKIE_FLAG \
             -o "books/${{ inputs.target_folder }}/story_video.mp4" \
             "${{ inputs.youtube_url }}"
+
+      - name: Clean up sensitive files
+        if: always()
+        run: |
+          rm -f cookies.txt
 
       - name: Commit and Push to Repository
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add "books/${{ inputs.target_folder }}/"
-          git commit -m "chore: add extracted media for ${{ inputs.target_folder }}" || echo "No changes to commit"
-          git push
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: add extracted media for ${{ inputs.target_folder }}"
+            git push origin main
+          fi
