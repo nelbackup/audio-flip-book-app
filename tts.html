@@ -5,12 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Unified Streaming Narration Studio</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background-color: #0b0f19;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -22,7 +17,6 @@
       color: #f8fafc;
       padding: 1.5rem;
     }
-
     .card {
       background: rgba(30, 41, 59, 0.75);
       backdrop-filter: blur(16px);
@@ -33,25 +27,10 @@
       max-width: 680px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     }
+    .card-header { margin-bottom: 1.25rem; }
+    h1 { font-size: 1.4rem; font-weight: 700; color: #f8fafc; }
+    p.subtitle { font-size: 0.85rem; color: #94a3b8; margin-top: 0.25rem; line-height: 1.4; }
 
-    .card-header {
-      margin-bottom: 1.25rem;
-    }
-
-    h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: #f8fafc;
-    }
-
-    p.subtitle {
-      font-size: 0.85rem;
-      color: #94a3b8;
-      margin-top: 0.25rem;
-      line-height: 1.4;
-    }
-
-    /* Provider Selector */
     .provider-toggle {
       display: flex;
       gap: 0.5rem;
@@ -61,7 +40,6 @@
       border-radius: 0.6rem;
       border: 1px solid #334155;
     }
-
     .provider-btn {
       flex: 1;
       background: transparent;
@@ -74,25 +52,10 @@
       cursor: pointer;
       transition: all 0.2s;
     }
+    .provider-btn.active { background: #4f46e5; color: #fff; }
 
-    .provider-btn.active {
-      background: #4f46e5;
-      color: #fff;
-    }
-
-    .form-group {
-      margin-bottom: 1.15rem;
-    }
-
-    label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #cbd5e1;
-      margin-bottom: 0.4rem;
-    }
-
+    .form-group { margin-bottom: 1.15rem; }
+    label { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.4rem; }
     select, textarea {
       width: 100%;
       padding: 0.75rem 0.9rem;
@@ -102,19 +65,9 @@
       color: #f1f5f9;
       font-size: 0.88rem;
       outline: none;
-      transition: border-color 0.2s;
       font-family: inherit;
     }
-
-    select:focus, textarea:focus {
-      border-color: #6366f1;
-    }
-
-    textarea {
-      resize: vertical;
-      min-height: 140px;
-      line-height: 1.5;
-    }
+    textarea { resize: vertical; min-height: 140px; line-height: 1.5; }
 
     .stream-trigger-btn {
       width: 100%;
@@ -130,21 +83,11 @@
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
-      transition: background 0.2s, transform 0.1s;
       margin-top: 0.5rem;
     }
+    .stream-trigger-btn:hover:not(:disabled) { background: #4338ca; }
+    .stream-trigger-btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
 
-    .stream-trigger-btn:hover:not(:disabled) {
-      background: #4338ca;
-    }
-
-    .stream-trigger-btn:disabled {
-      background: #334155;
-      color: #64748b;
-      cursor: not-allowed;
-    }
-
-    /* Live Streaming Monitor & Player */
     .stream-monitor {
       margin-top: 1.25rem;
       background: #0b0f19;
@@ -153,7 +96,6 @@
       padding: 1.2rem;
       display: none;
     }
-
     .monitor-header {
       display: flex;
       justify-content: space-between;
@@ -161,28 +103,17 @@
       font-size: 0.82rem;
       margin-bottom: 0.75rem;
     }
-
     .pulse-dot {
       display: inline-block;
-      width: 8px;
-      height: 8px;
+      width: 8px; height: 8px;
       border-radius: 50%;
       background: #10b981;
       margin-right: 0.4rem;
       animation: pulse 1.5s infinite;
     }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(1.2); }
-    }
-
-    audio {
-      width: 100%;
-      height: 42px;
-      border-radius: 0.5rem;
-      margin-top: 0.5rem;
-    }
+    audio { width: 100%; height: 42px; border-radius: 0.5rem; margin-top: 0.5rem; }
 
     .btn-download {
       display: none;
@@ -198,24 +129,9 @@
       font-size: 0.95rem;
       margin-top: 1rem;
       box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-      transition: background 0.2s;
+      cursor: pointer;
     }
-
-    .btn-download:hover {
-      background: #059669;
-    }
-
-    .download-path-hint {
-      display: none;
-      font-size: 0.76rem;
-      color: #94a3b8;
-      text-align: center;
-      margin-top: 0.5rem;
-    }
-
-    .download-path-hint code {
-      color: #38bdf8;
-    }
+    .btn-download:hover { background: #059669; }
 
     .tier-alert {
       margin-top: 1rem;
@@ -225,7 +141,6 @@
       line-height: 1.45;
       display: none;
     }
-
     .tier-alert.error {
       display: block;
       background: rgba(244, 63, 94, 0.15);
@@ -233,29 +148,29 @@
       color: #fda4af;
     }
 
-    .btn-auto-fix {
-      display: inline-block;
-      margin-top: 0.5rem;
-      background: #e11d48;
-      color: #fff;
-      border: none;
-      padding: 0.4rem 0.85rem;
-      border-radius: 0.4rem;
-      font-size: 0.78rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
+    .nav-link { display: inline-block; margin-top: 1.5rem; font-size: 0.85rem; color: #818cf8; text-decoration: none; }
+    .nav-link:hover { text-decoration: underline; }
 
-    .nav-link {
-      display: inline-block;
-      margin-top: 1.5rem;
-      font-size: 0.85rem;
-      color: #818cf8;
-      text-decoration: none;
+    /* Modal Popup Prompt for Local Download */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center; padding: 1.5rem; z-index: 1000;
     }
-
-    .nav-link:hover {
-      text-decoration: underline;
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 1rem;
+      padding: 2rem; width: 100%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
+      text-align: center;
+    }
+    .modal h2 { font-size: 1.25rem; color: #34d399; margin-bottom: 0.5rem; }
+    .modal p { font-size: 0.85rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 1.25rem; }
+    .modal code {
+      background: #0f172a; color: #38bdf8; padding: 0.3rem 0.6rem; border-radius: 0.4rem;
+      font-size: 0.82rem; display: block; margin: 0.75rem 0; word-break: break-all;
+    }
+    .btn-modal-close {
+      background: #4f46e5; color: #fff; border: none; padding: 0.65rem 1.5rem;
+      border-radius: 0.5rem; font-weight: 600; cursor: pointer;
     }
   </style>
 </head>
@@ -269,15 +184,15 @@
 
     <!-- Provider Tabs -->
     <div class="provider-toggle">
-      <button type="button" class="provider-btn active" id="btn-tab-eleven">🇬🇧 English (ElevenLabs)</button>
-      <button type="button" class="provider-btn" id="btn-tab-cantonese">🇭🇰 Cantonese (Free Cloud MP3)</button>
+      <button type="button" class="provider-btn" id="btn-tab-eleven">🇬🇧 English (ElevenLabs)</button>
+      <button type="button" class="provider-btn active" id="btn-tab-cantonese">🇭🇰 Cantonese (Free Cloud MP3)</button>
     </div>
 
     <!-- Voice Selection -->
     <div class="form-group">
       <label for="voice-select">
         <span>Narrator Voice</span>
-        <span id="voice-tag" style="color: #38bdf8; font-weight: normal; font-size: 0.75rem;">Default: Casey</span>
+        <span id="voice-tag" style="color: #38bdf8; font-size: 0.75rem;">Cantonese Cloud MP3</span>
       </label>
       <select id="voice-select"></select>
     </div>
@@ -293,13 +208,9 @@
 
     <button class="stream-trigger-btn" id="btn-stream">⚡ Synthesize & Prepare MP3</button>
 
-    <!-- Error / Alert Banner -->
-    <div id="tier-alert-box" class="tier-alert">
-      <div id="alert-text"></div>
-      <button type="button" id="btn-quick-fix" class="btn-auto-fix" style="display: none;">Switch to Free-Safe Voice & Stream</button>
-    </div>
+    <div id="tier-alert-box" class="tier-alert"></div>
 
-    <!-- Live Streaming Monitor & Player -->
+    <!-- Live Player & Download Area -->
     <div class="stream-monitor" id="stream-monitor">
       <div class="monitor-header">
         <div><span class="pulse-dot"></span><strong id="stream-status">Buffering Stream...</strong></div>
@@ -311,16 +222,24 @@
       <a id="btn-download" class="btn-download" download="soundtrack.mp3" href="#">
         ⬇ Download soundtrack.mp3
       </a>
-      <p id="download-hint" class="download-path-hint">
-        Save the audio file to: <code>books/highway-rat/soundtrack.mp3</code>
-      </p>
     </div>
 
     <a href="index.html" class="nav-link">← Return to Bookshelf</a>
   </div>
 
+  <!-- Local Save Instructions Popup Modal -->
+  <div id="download-modal" class="modal-backdrop">
+    <div class="modal">
+      <h2>🎉 Audio Prepared Successfully!</h2>
+      <p>Your browser has initiated the download for <strong>soundtrack.mp3</strong>.</p>
+      <p>Save or place the file directly into your local book directory:</p>
+      <code>D:\MissJ\audio-flip-book-app\books\highway-rat\soundtrack.mp3</code>
+      <button type="button" class="btn-modal-close" id="btn-close-modal">Got it!</button>
+    </div>
+  </div>
+
   <script>
-    let activeProvider = 'elevenlabs';
+    let activeProvider = 'cantonese'; // Default to Cantonese as in screenshot
 
     const tabEleven = document.getElementById('btn-tab-eleven');
     const tabCantonese = document.getElementById('btn-tab-cantonese');
@@ -331,36 +250,32 @@
     const streamBtn = document.getElementById('btn-stream');
 
     const alertBox = document.getElementById('tier-alert-box');
-    const alertText = document.getElementById('alert-text');
-    const quickFixBtn = document.getElementById('btn-quick-fix');
-
     const monitor = document.getElementById('stream-monitor');
     const streamStatus = document.getElementById('stream-status');
     const streamStats = document.getElementById('stream-stats');
     const audioPlayer = document.getElementById('audio-player');
     const downloadBtn = document.getElementById('btn-download');
-    const downloadHint = document.getElementById('download-hint');
+
+    const downloadModal = document.getElementById('download-modal');
+    const closeModalBtn = document.getElementById('btn-close-modal');
+
+    const CANTONESE_SCRIPT = `喺失物招領嘅枱上面，有四個書包。書包上面嘅名牌甩咗出嚟，所以我們要幫同學仔搵返佢哋嘅書包。請大家仔細聽清楚喇！
+
+首先，我哋睇下阿妮嘅書包。阿妮同老師講，佢嘅書包唔係綠色，亦都唔係藍色。書包入面有一支水樽同三把尺。佢每日上數學堂都會用到呢啲尺。`;
 
     const ENGLISH_SCRIPT = `The first day of November is a special day for Emily. It is her lucky day because she won a drawing competition at school. Draw a star on 1st November.
 
 The next day is even more exciting. 2nd November is Emily's birthday. She will celebrate with her family and friends. Draw a birthday cake on 2nd November.`;
 
-    const CANTONESE_SCRIPT = `早晨，各位同學！歡迎嚟到光明小學。
-
-喺失物招領嘅枱上面，有四個書包。書包上面嘅名牌甩咗出嚟，所以我們要幫同學仔搵返佢哋嘅書包。請大家仔細聽清楚喇！
-
-首先，我哋睇下阿妮嘅書包。阿妮同老師講，佢嘅書包唔係綠色，亦都唔係藍色。書包入面有一支水樽同三把尺。佢每日上數學堂都會用到呢啲尺。`;
-
     const ELEVEN_VOICES = [
-      { id: "piTKgcLEGmPE4e6mEKli", name: "Casey - Clean, Crisp and Friendly (Preferred)" },
-      { id: "21m00Tcm4TlvDq8ikWAM", name: "Rachel - Calm & Storybook (100% Free API Safe)" },
-      { id: "Xb7hH8MSUJpSbSDYk0k2", name: "Alice - Clear Educator (100% Free API Safe)" },
-      { id: "pNInz6obpgDQGcFmaJgB", name: "Adam - Warm Storyteller (100% Free API Safe)" }
+      { id: "21m00Tcm4TlvDq8ikWAM", name: "Rachel - Calm & Storybook (Default Free-Tier Safe)" },
+      { id: "Xb7hH8MSUJpSbSDYk0k2", name: "Alice - Clear Educator (Free-Tier Safe)" },
+      { id: "pNInz6obpgDQGcFmaJgB", name: "Adam - Warm Storyteller (Free-Tier Safe)" }
     ];
 
     const CANTONESE_VOICES = [
-      { id: "cantonese_cloud_hk", name: "🇭🇰 Hong Kong Cantonese Story Voice (Direct MP3)" },
-      { id: "cantonese_cloud_tw", name: "🇨🇳 Traditional Chinese Narration (Direct MP3)" }
+      { id: "zh-HK", name: "🇭🇰 Hong Kong Cantonese Story Voice (Direct MP3)" },
+      { id: "zh-TW", name: "🇨🇳 Traditional Chinese Narration (Direct MP3)" }
     ];
 
     function updateCounter() {
@@ -373,18 +288,18 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
       alertBox.style.display = 'none';
       monitor.style.display = 'none';
 
-      if (provider === 'elevenlabs') {
-        tabEleven.classList.add('active');
-        tabCantonese.classList.remove('active');
-        voiceTag.innerText = 'Default: Casey (English)';
-        voiceSelect.innerHTML = ELEVEN_VOICES.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
-        storyText.value = ENGLISH_SCRIPT;
-      } else {
+      if (provider === 'cantonese') {
         tabCantonese.classList.add('active');
         tabEleven.classList.remove('active');
-        voiceTag.innerText = 'Default: Cantonese Cloud MP3';
+        voiceTag.innerText = 'Cantonese Cloud MP3';
         voiceSelect.innerHTML = CANTONESE_VOICES.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
         storyText.value = CANTONESE_SCRIPT;
+      } else {
+        tabEleven.classList.add('active');
+        tabCantonese.classList.remove('active');
+        voiceTag.innerText = 'Rachel (Default)';
+        voiceSelect.innerHTML = ELEVEN_VOICES.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
+        storyText.value = ENGLISH_SCRIPT;
       }
       updateCounter();
     }
@@ -392,23 +307,14 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
     tabEleven.addEventListener('click', () => setProvider('elevenlabs'));
     tabCantonese.addEventListener('click', () => setProvider('cantonese'));
 
-    function showAlert(msg, isError = true, showFix = false) {
-      alertText.innerHTML = msg;
-      alertBox.className = `tier-alert ${isError ? 'error' : 'info'}`;
-      alertBox.style.display = 'block';
-      quickFixBtn.style.display = showFix ? 'inline-block' : 'none';
-    }
-
-    quickFixBtn.addEventListener('click', () => {
-      voiceSelect.value = "21m00Tcm4TlvDq8ikWAM";
-      alertBox.style.display = 'none';
-      streamBtn.click();
-    });
+    closeModalBtn.addEventListener('click', () => downloadModal.classList.remove('open'));
 
     streamBtn.addEventListener('click', async () => {
       const text = storyText.value.trim();
       if (!text) {
-        showAlert('Please enter narration text.');
+        alertBox.className = 'tier-alert error';
+        alertBox.innerText = 'Please enter narration text.';
+        alertBox.style.display = 'block';
         return;
       }
 
@@ -416,98 +322,65 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
       streamBtn.disabled = true;
       monitor.style.display = 'block';
       downloadBtn.style.display = 'none';
-      downloadHint.style.display = 'none';
-
-      // Cantonese Path
-      if (activeProvider === 'cantonese') {
-        streamStatus.innerText = 'Generating Cantonese MP3 soundtrack...';
-        streamStats.innerText = 'Format: audio/mp3';
-
-        const lang = voiceSelect.value === 'cantonese_cloud_hk' ? 'zh-HK' : 'zh-TW';
-        const cleanText = text.replace(/<[^>]+>/g, ' ');
-        const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodeURIComponent(cleanText)}`;
-
-        audioPlayer.src = audioUrl;
-        audioPlayer.play().catch(() => {});
-
-        downloadBtn.href = audioUrl;
-        downloadBtn.setAttribute('download', 'soundtrack.mp3');
-        downloadBtn.style.display = 'flex';
-        downloadHint.style.display = 'block';
-
-        streamStatus.innerText = 'Cantonese audio ready to play & download!';
-        streamBtn.disabled = false;
-        return;
-      }
-
-      // ElevenLabs Server-Side Streamed Path
-      streamStatus.innerText = 'Connecting to ElevenLabs stream...';
-      streamStats.innerText = 'Received: 0 KB';
+      streamStatus.innerText = 'Synthesizing soundtrack via server...';
+      streamStats.innerText = 'Buffering binary...';
 
       try {
+        const payload = activeProvider === 'cantonese'
+          ? { text, provider: 'cantonese', lang: voiceSelect.value }
+          : { text, provider: 'elevenlabs', voice_id: voiceSelect.value };
+
         const response = await fetch('/api/tts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            text: text,
-            voice_id: voiceSelect.value
-          })
+          body: JSON.stringify(payload)
         });
 
         if (!response.ok) {
-          const err = await response.json().catch(() => ({}));
-          const errMsg = err?.detail?.message || `HTTP ${response.status}`;
-
-          if (errMsg.includes('library voices') || errMsg.includes('Free users')) {
-            throw new Error('FREE_TIER_LIBRARY_VOICE');
-          }
-          throw new Error(errMsg);
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData?.error || `Server responded with HTTP ${response.status}`);
         }
 
-        const reader = response.body.getReader();
-        const chunks = [];
-        let totalBytes = 0;
+        const audioBlob = await response.blob();
+        if (audioBlob.size === 0) throw new Error('Received empty audio stream from TTS server.');
 
-        streamStatus.innerText = 'Streaming audio chunks...';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          chunks.push(value);
-          totalBytes += value.length;
-          streamStats.innerText = `Received: ${(totalBytes / 1024).toFixed(1)} KB`;
-        }
-
-        const audioBlob = new Blob(chunks, { type: 'audio/mpeg' });
         const audioUrl = URL.createObjectURL(audioBlob);
 
+        // 1. Attach to audio player with full timeline & duration
         audioPlayer.src = audioUrl;
         audioPlayer.play().catch(() => {});
 
+        // 2. Setup download button
         downloadBtn.href = audioUrl;
         downloadBtn.setAttribute('download', 'soundtrack.mp3');
         downloadBtn.style.display = 'flex';
-        downloadHint.style.display = 'block';
 
-        streamStatus.innerText = 'Playback & MP3 download ready!';
+        streamStatus.innerText = 'Narration synthesized successfully!';
+        streamStats.innerText = `Size: ${(audioBlob.size / 1024).toFixed(1)} KB`;
+
+        // 3. Prompt user to download locally
+        const autoLink = document.createElement('a');
+        autoLink.href = audioUrl;
+        autoLink.download = 'soundtrack.mp3';
+        document.body.appendChild(autoLink);
+        autoLink.click();
+        document.body.removeChild(autoLink);
+
+        // 4. Open destination guidance popup
+        downloadModal.classList.add('open');
 
       } catch (err) {
         monitor.style.display = 'none';
-        if (err.message === 'FREE_TIER_LIBRARY_VOICE') {
-          showAlert(
-            `<strong>ElevenLabs Free Tier Policy:</strong> <em>Casey</em> is a community library voice and cannot be accessed via API on Free accounts. Default premade voices (Rachel, Alice, Adam) are supported.`,
-            true,
-            true
-          );
-        } else {
-          showAlert(`Error: ${err.message}`);
-        }
+        alertBox.className = 'tier-alert error';
+        alertBox.innerText = `Synthesis Error: ${err.message}`;
+        alertBox.style.display = 'block';
       } finally {
         streamBtn.disabled = false;
       }
     });
 
-    setProvider('elevenlabs');
+    // Initialize with Cantonese view as in screenshot
+    setProvider('cantonese');
   </script>
 </body>
 </html>
