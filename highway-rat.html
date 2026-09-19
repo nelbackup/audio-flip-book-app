@@ -85,6 +85,16 @@
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
     }
 
+    /* High-DPI & Crisp Font Rendering */
+    #flipbook img,
+    .stf__item img,
+    .stf__wrapper canvas {
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+      -webkit-font-smoothing: antialiased;
+      transform: translateZ(0);
+    }
+
     /* Floating Controls Bar */
     .controls {
       position: fixed;
@@ -227,27 +237,31 @@
       return `${m}:${s < 10 ? '0' : ''}${s}`;
     }
 
-    // Inspect natural image dimensions before mounting engine to prevent squishing
+    // Inspect image dimensions and scale virtual buffer to high-DPI
     const probe = new Image();
-    probe.src = `${PAGES_DIR}/page-1.webp?v=5`;
+    probe.src = `${PAGES_DIR}/page-1.webp?v=6`;
 
     probe.onload = () => {
-      initFlipBook(probe.naturalWidth || 560, probe.naturalHeight || 500);
+      initFlipBook(probe.naturalWidth || 840, probe.naturalHeight || 750);
     };
 
     probe.onerror = () => {
-      initFlipBook(560, 500);
+      initFlipBook(840, 750);
     };
 
     function initFlipBook(pageW, pageH) {
+      const scale = Math.max(1, 1200 / pageH);
+      const renderW = Math.round(pageW * scale);
+      const renderH = Math.round(pageH * scale);
+
       pageFlip = new St.PageFlip(bookContainer, {
-        width: pageW,
-        height: pageH,
+        width: renderW,
+        height: renderH,
         size: "stretch",
-        minWidth: 280,
-        maxWidth: 850,
-        minHeight: 280,
-        maxHeight: 850,
+        minWidth: 320,
+        maxWidth: 1600,
+        minHeight: 400,
+        maxHeight: 1600,
         showCover: true,
         drawShadow: true,
         flippingTime: 700,
@@ -257,7 +271,7 @@
 
       const pageImages = [];
       for (let i = 0; i < TOTAL_PAGES; i++) {
-        pageImages.push(`${PAGES_DIR}/page-${i}.webp?v=5`);
+        pageImages.push(`${PAGES_DIR}/page-${i}.webp?v=6`);
       }
       pageFlip.loadFromImages(pageImages);
 
@@ -282,6 +296,7 @@
       });
     }
 
+    // Audio -> Flip Synchronization
     audio.addEventListener('timeupdate', () => {
       audioTime.innerText = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration || 0)}`;
       const currentCue = getCueForTime(audio.currentTime);
@@ -310,7 +325,7 @@
         audio.play().then(() => {
           playBtn.innerText = '❚❚ Pause';
         }).catch(err => {
-          console.warn("Audio file missing:", err);
+          console.warn("Audio playback issue:", err);
           alert("Audio file not found in books/highway-rat/soundtrack.mp3.");
         });
       } else {
