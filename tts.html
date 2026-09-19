@@ -23,7 +23,7 @@
       padding: 1.5rem;
     }
 
-    /* Main Container Card */
+    /* Main Card */
     .card {
       background: rgba(30, 41, 59, 0.75);
       backdrop-filter: blur(16px);
@@ -143,7 +143,7 @@
 
     textarea {
       resize: vertical;
-      min-height: 140px;
+      min-height: 150px;
       line-height: 1.45;
     }
 
@@ -239,7 +239,7 @@
       text-decoration: underline;
     }
 
-    /* In-Memory Login Modal */
+    /* Modal Backdrop */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -329,18 +329,18 @@
       <button type="button" class="provider-btn" id="btn-tab-minimax">MiniMax</button>
     </div>
 
-    <!-- Voice Selection: Defaults to Casey -->
+    <!-- Voice Selection: Pre-populated with Free-Tier compatible Default Voices -->
     <div class="form-group">
       <label for="voice-select">
         <span>Narrator Voice</span>
-        <span id="voice-desc" style="color: #94a3b8; font-weight: normal; font-size: 0.75rem;">Clean, Crisp and Friendly</span>
+        <span id="voice-desc" style="color: #34d399; font-weight: normal; font-size: 0.75rem;">Free Tier Supported</span>
       </label>
       <select id="voice-select">
-        <!-- Default: Casey (Selected) -->
-        <option value="piTKgcLEGmPE4e6mEKli" selected>Casey - Clean, Crisp and Friendly</option>
-        <option value="21m00Tcm4TlvDq8ikWAM">Rachel - Calm & Storybook</option>
+        <option value="21m00Tcm4TlvDq8ikWAM" selected>Rachel - Calm, Natural & Storybook</option>
+        <option value="Xb7hH8MSUJpSbSDYk0k2">Alice - Clear & Friendly Educator</option>
+        <option value="EXAVITQu4vr4xnSDxMaL">Bella - Soft & Gentle</option>
+        <option value="ErXwobaYiN019PkySvjV">Antoni - Lively & Engaging</option>
         <option value="pNInz6obpgDQGcFmaJgB">Adam - Warm & Deep</option>
-        <option value="ErXwobaYiN019PkySvjV">Antoni - Lively Bedtime</option>
       </select>
     </div>
 
@@ -349,7 +349,7 @@
       <label for="model-select">AI Model</label>
       <select id="model-select">
         <option value="eleven_multilingual_v2" selected>Eleven Multilingual v2 (Rich Story Expression)</option>
-        <option value="eleven_turbo_v2_5">Eleven Turbo v2.5 (Fast Playback)</option>
+        <option value="eleven_turbo_v2_5">Eleven Turbo v2.5 (Low Latency)</option>
       </select>
     </div>
 
@@ -403,11 +403,11 @@ Before you finish, check your work carefully. Make sure you have drawn a star on
   <div id="login-modal" class="modal-backdrop">
     <div class="modal">
       <h2 id="modal-title">API Authentication</h2>
-      <p>Your API key is held exclusively in <strong>volatile browser memory (RAM)</strong> for this session only. It is never written to disk, localStorage, or sent to any third-party server.</p>
+      <p>Your API key is stored exclusively in <strong>volatile memory (RAM)</strong> for this browser tab session. It will never be saved to localStorage, indexedDB, or cookies.</p>
 
       <div class="form-group">
         <label for="modal-key-input" id="modal-key-label">API Key</label>
-        <input type="text" id="modal-key-input" placeholder="Paste your API key..." autocomplete="off" />
+        <input type="password" id="modal-key-input" placeholder="Paste your API key..." autocomplete="off" />
       </div>
 
       <div class="form-group" id="modal-group-id-wrapper" style="display: none;">
@@ -423,7 +423,7 @@ Before you finish, check your work carefully. Make sure you have drawn a star on
   </div>
 
   <script>
-    // Pure in-memory session credentials (zero localStorage / cookies persistence)
+    // Session state strictly held in volatile memory
     let sessionKey = null;
     let sessionGroupId = null;
     let activeProvider = 'elevenlabs';
@@ -451,12 +451,13 @@ Before you finish, check your work carefully. Make sure you have drawn a star on
     const audioPlayer = document.getElementById('audio-player');
     const downloadBtn = document.getElementById('download-audio-btn');
 
-    // Preset options (Defaults to Casey - Clean, Crisp and Friendly)
+    // Default voices accessible by Free Tier accounts
     const ELEVEN_VOICES = [
-      { id: "piTKgcLEGmPE4e6mEKli", name: "Casey - Clean, Crisp and Friendly" },
-      { id: "21m00Tcm4TlvDq8ikWAM", name: "Rachel - Calm & Storybook" },
-      { id: "pNInz6obpgDQGcFmaJgB", name: "Adam - Warm & Deep" },
-      { id: "ErXwobaYiN019PkySvjV", name: "Antoni - Lively Bedtime" }
+      { id: "21m00Tcm4TlvDq8ikWAM", name: "Rachel - Calm, Natural & Storybook" },
+      { id: "Xb7hH8MSUJpSbSDYk0k2", name: "Alice - Clear & Friendly Educator" },
+      { id: "EXAVITQu4vr4xnSDxMaL", name: "Bella - Soft & Gentle" },
+      { id: "ErXwobaYiN019PkySvjV", name: "Antoni - Lively & Engaging" },
+      { id: "pNInz6obpgDQGcFmaJgB", name: "Adam - Warm & Deep" }
     ];
 
     const MINIMAX_VOICES = [
@@ -519,7 +520,7 @@ Before you finish, check your work carefully. Make sure you have drawn a star on
         modelGroup.style.display = 'block';
 
         voiceSelect.innerHTML = ELEVEN_VOICES.map(v => 
-          `<option value="${v.id}" ${v.id === 'piTKgcLEGmPE4e6mEKli' ? 'selected' : ''}>${v.name}</option>`
+          `<option value="${v.id}" ${v.id === '21m00Tcm4TlvDq8ikWAM' ? 'selected' : ''}>${v.name}</option>`
         ).join('');
       } else {
         tabMiniMax.classList.add('active');
@@ -542,7 +543,6 @@ Before you finish, check your work carefully. Make sure you have drawn a star on
     }
 
     generateBtn.addEventListener('click', async () => {
-      // Prompt modal if API key has not been entered into session memory
       if (!sessionKey) {
         openLoginModal();
         return;
@@ -592,7 +592,6 @@ Before you finish, check your work carefully. Make sure you have drawn a star on
           bindResult(blob);
 
         } else {
-          // MiniMax endpoint
           if (!sessionGroupId) {
             openLoginModal();
             throw new Error('MiniMax requires a valid Group ID.');
