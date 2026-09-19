@@ -23,6 +23,7 @@
       padding: 1.5rem;
     }
 
+    /* Main Container Card */
     .card {
       background: rgba(30, 41, 59, 0.75);
       backdrop-filter: blur(16px);
@@ -30,24 +31,58 @@
       padding: 2rem;
       border-radius: 1.25rem;
       width: 100%;
-      max-width: 620px;
+      max-width: 640px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.25rem;
     }
 
     h1 {
       font-size: 1.35rem;
       font-weight: 700;
-      margin-bottom: 0.35rem;
       color: #f8fafc;
     }
 
     p.subtitle {
       font-size: 0.85rem;
       color: #94a3b8;
-      margin-bottom: 1.5rem;
+      margin-top: 0.25rem;
       line-height: 1.4;
     }
 
+    /* Auth Status Indicator */
+    .auth-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid #334155;
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .auth-badge.authenticated {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+
+    .auth-badge:hover {
+      border-color: #6366f1;
+    }
+
+    /* Provider Selector */
     .provider-toggle {
       display: flex;
       gap: 0.5rem;
@@ -63,7 +98,7 @@
       background: transparent;
       color: #94a3b8;
       border: none;
-      padding: 0.6rem;
+      padding: 0.55rem;
       font-size: 0.85rem;
       font-weight: 600;
       border-radius: 0.4rem;
@@ -81,17 +116,15 @@
     }
 
     label {
-      display: block;
+      display: flex;
+      justify-content: space-between;
       font-size: 0.8rem;
       font-weight: 600;
       color: #cbd5e1;
       margin-bottom: 0.35rem;
     }
 
-    input[type="text"],
-    input[type="password"],
-    select,
-    textarea {
+    select, textarea, input[type="text"] {
       width: 100%;
       padding: 0.75rem 0.9rem;
       background: #0b0f19;
@@ -104,14 +137,14 @@
       font-family: inherit;
     }
 
-    input:focus, select:focus, textarea:focus {
+    select:focus, textarea:focus, input:focus {
       border-color: #6366f1;
     }
 
     textarea {
       resize: vertical;
-      min-height: 120px;
-      line-height: 1.4;
+      min-height: 140px;
+      line-height: 1.45;
     }
 
     .btn-submit {
@@ -205,13 +238,90 @@
     .nav-link:hover {
       text-decoration: underline;
     }
+
+    /* In-Memory Login Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      z-index: 1000;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 1rem;
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      color: #f8fafc;
+    }
+
+    .modal p {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.4;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .btn-cancel {
+      background: #334155;
+      color: #cbd5e1;
+      border: none;
+      padding: 0.65rem 1.2rem;
+      border-radius: 0.5rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-confirm {
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      padding: 0.65rem 1.25rem;
+      border-radius: 0.5rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
   <div class="card">
-    <h1>Storybook Narration Generator</h1>
-    <p class="subtitle">Generate high-fidelity audio tracks from story text using ElevenLabs or MiniMax APIs.</p>
+    <div class="card-header">
+      <div>
+        <h1>Narration Studio</h1>
+        <p class="subtitle">Synthesize synchronized picture book tracks via high-fidelity TTS.</p>
+      </div>
+      <button type="button" id="auth-status-btn" class="auth-badge">
+        <span id="auth-dot">⚪</span> <span id="auth-label">Connect API</span>
+      </button>
+    </div>
 
     <!-- Provider Selection -->
     <div class="provider-toggle">
@@ -219,30 +329,62 @@
       <button type="button" class="provider-btn" id="btn-tab-minimax">MiniMax</button>
     </div>
 
-    <!-- API Key Input -->
+    <!-- Voice Selection: Defaults to Casey -->
     <div class="form-group">
-      <label for="api-key" id="lbl-api-key">ElevenLabs API Key</label>
-      <input type="password" id="api-key" placeholder="Enter your API Key..." autocomplete="off" />
-    </div>
-
-    <!-- Voice Selection -->
-    <div class="form-group" id="group-voice">
-      <label for="voice-select">Narrator Voice</label>
+      <label for="voice-select">
+        <span>Narrator Voice</span>
+        <span id="voice-desc" style="color: #94a3b8; font-weight: normal; font-size: 0.75rem;">Clean, Crisp and Friendly</span>
+      </label>
       <select id="voice-select">
-        <!-- Populated dynamically based on provider -->
+        <!-- Default: Casey (Selected) -->
+        <option value="piTKgcLEGmPE4e6mEKli" selected>Casey - Clean, Crisp and Friendly</option>
+        <option value="21m00Tcm4TlvDq8ikWAM">Rachel - Calm & Storybook</option>
+        <option value="pNInz6obpgDQGcFmaJgB">Adam - Warm & Deep</option>
+        <option value="ErXwobaYiN019PkySvjV">Antoni - Lively Bedtime</option>
       </select>
     </div>
 
-    <!-- MiniMax Group ID (Only for MiniMax) -->
-    <div class="form-group" id="group-minimax-id" style="display: none;">
-      <label for="minimax-group-id">MiniMax Group ID</label>
-      <input type="text" id="minimax-group-id" placeholder="Enter your Group ID..." />
+    <!-- Model Specifier -->
+    <div class="form-group" id="group-model">
+      <label for="model-select">AI Model</label>
+      <select id="model-select">
+        <option value="eleven_multilingual_v2" selected>Eleven Multilingual v2 (Rich Story Expression)</option>
+        <option value="eleven_turbo_v2_5">Eleven Turbo v2.5 (Fast Playback)</option>
+      </select>
     </div>
 
-    <!-- Text to Synthesize -->
+    <!-- Script Text Area with 8-second breaks -->
     <div class="form-group">
-      <label for="story-text">Story Text / Dialogue</label>
-      <textarea id="story-text" placeholder="Once upon a time, there was a little crocodile..."></textarea>
+      <label for="story-text">Story Script (Supports SSML Break Timing)</label>
+      <textarea id="story-text">Good morning, students! Welcome to Luminous Minds School.
+
+<break time="3s" /> <break time="3s" /> <break time="2s" />
+
+There are four school bags on the Lost and Found table. The names have fallen off, so we need to help the students find their bags. Listen carefully because there is a lot of information to remember!
+
+<break time="3s" /> <break time="3s" /> <break time="2s" />
+
+First, let's look at Annie's bag. Annie told the teacher that her bag is not green or blue. Inside her bag, there is one water bottle and three rulers. She uses the rulers in her Maths lessons every day.
+
+<break time="3s" /> <break time="3s" /> <break time="2s" />
+
+Next is Katy's bag. Katy loves reading. In her school bag, there is one pencil bag and a storybook called Luminous Minds. Her bag is bright like the sun. It is yellow.
+
+<break time="3s" /> <break time="3s" /> <break time="2s" />
+
+Now let's find Teddy's bag. Teddy is preparing for an art project. Inside his bag, there is a yellow pencil case and a pair of scissors. His bag is the same colour as the sky on a sunny day.
+
+<break time="3s" /> <break time="3s" /> <break time="2s" />
+
+Finally, we have Zachery's bag. Zachery likes drawing and writing. In his school bag, there are two erasers and two pencils. His bag is the same colour as grass and tree leaves.
+
+<break time="3s" /> <break time="3s" /> <break time="2s" />
+
+At the end of the month, Emily and her family have a special plan. On the last day of November, they will go on a picnic in the park. They will eat sandwiches, play games, and fly a kite together. Emily thinks it will be the happiest day of the month. Draw a smiling face on the last day of November.
+
+<break time="3s" /> <break time="3s" /> <break time="2s" />
+
+Before you finish, check your work carefully. Make sure you have drawn a star on 1st November, a birthday cake on 2nd November, the letter S on every Sunday, and a smiling face on the last day of November.</textarea>
     </div>
 
     <button class="btn-submit" id="btn-generate">🎙️ Synthesize Narration</button>
@@ -257,16 +399,51 @@
     <a href="index.html" class="nav-link">← Return to Bookshelf</a>
   </div>
 
+  <!-- In-Memory Login Modal Dialog -->
+  <div id="login-modal" class="modal-backdrop">
+    <div class="modal">
+      <h2 id="modal-title">API Authentication</h2>
+      <p>Your API key is held exclusively in <strong>volatile browser memory (RAM)</strong> for this session only. It is never written to disk, localStorage, or sent to any third-party server.</p>
+
+      <div class="form-group">
+        <label for="modal-key-input" id="modal-key-label">API Key</label>
+        <input type="text" id="modal-key-input" placeholder="Paste your API key..." autocomplete="off" />
+      </div>
+
+      <div class="form-group" id="modal-group-id-wrapper" style="display: none;">
+        <label for="modal-group-input">MiniMax Group ID</label>
+        <input type="text" id="modal-group-input" placeholder="Enter MiniMax Group ID..." autocomplete="off" />
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="btn-modal-cancel">Cancel</button>
+        <button type="button" class="btn-confirm" id="btn-modal-save">Use for this Session</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // Pure in-memory session credentials (zero localStorage / cookies persistence)
+    let sessionKey = null;
+    let sessionGroupId = null;
     let activeProvider = 'elevenlabs';
+
+    const modal = document.getElementById('login-modal');
+    const authBtn = document.getElementById('auth-status-btn');
+    const authDot = document.getElementById('auth-dot');
+    const authLabel = document.getElementById('auth-label');
+    const modalKeyInput = document.getElementById('modal-key-input');
+    const modalKeyLabel = document.getElementById('modal-key-label');
+    const modalGroupWrapper = document.getElementById('modal-group-id-wrapper');
+    const modalGroupInput = document.getElementById('modal-group-input');
+    const modalCancel = document.getElementById('btn-modal-cancel');
+    const modalSave = document.getElementById('btn-modal-save');
 
     const tabEleven = document.getElementById('btn-tab-eleven');
     const tabMiniMax = document.getElementById('btn-tab-minimax');
-    const lblApiKey = document.getElementById('lbl-api-key');
-    const apiKeyInput = document.getElementById('api-key');
     const voiceSelect = document.getElementById('voice-select');
-    const groupMiniMax = document.getElementById('group-minimax-id');
-    const minimaxIdInput = document.getElementById('minimax-group-id');
+    const modelGroup = document.getElementById('group-model');
+    const modelSelect = document.getElementById('model-select');
     const storyText = document.getElementById('story-text');
     const generateBtn = document.getElementById('btn-generate');
     const statusBox = document.getElementById('status-box');
@@ -274,19 +451,62 @@
     const audioPlayer = document.getElementById('audio-player');
     const downloadBtn = document.getElementById('download-audio-btn');
 
+    // Preset options (Defaults to Casey - Clean, Crisp and Friendly)
     const ELEVEN_VOICES = [
-      { id: "21m00Tcm4TlvDq8ikWAM", name: "Rachel (Calm & Storybook)" },
-      { id: "pNInz6obpgDQGcFmaJgB", name: "Adam (Warm & Deep)" },
-      { id: "ErXwobaYiN019PkySvjV", name: "Antoni (Lively Bedtime)" },
-      { id: "EXAVITQu4vr4xnSDxMaL", name: "Bella (Soft & Gentle)" }
+      { id: "piTKgcLEGmPE4e6mEKli", name: "Casey - Clean, Crisp and Friendly" },
+      { id: "21m00Tcm4TlvDq8ikWAM", name: "Rachel - Calm & Storybook" },
+      { id: "pNInz6obpgDQGcFmaJgB", name: "Adam - Warm & Deep" },
+      { id: "ErXwobaYiN019PkySvjV", name: "Antoni - Lively Bedtime" }
     ];
 
     const MINIMAX_VOICES = [
-      { id: "male-qn-qingse", name: "Youth Storyteller (青涩青年)" },
       { id: "presenter_male", name: "Gentle Narrator (播音男声)" },
       { id: "presenter_female", name: "Sweet Bedtime Story (甜美童话)" },
-      { id: "audiobook_female_1", name: "Expressive Audio (有声书女)" }
+      { id: "audiobook_female_1", name: "Expressive Audio (有声书女)" },
+      { id: "male-qn-qingse", name: "Youth Storyteller (青涩青年)" }
     ];
+
+    function updateAuthBadge() {
+      if (sessionKey) {
+        authBtn.classList.add('authenticated');
+        authDot.innerText = '🟢';
+        authLabel.innerText = 'Session Active';
+      } else {
+        authBtn.classList.remove('authenticated');
+        authDot.innerText = '⚪';
+        authLabel.innerText = 'Connect API';
+      }
+    }
+
+    function openLoginModal() {
+      modalKeyLabel.innerText = activeProvider === 'elevenlabs' ? 'ElevenLabs API Key' : 'MiniMax API Key';
+      modalGroupWrapper.style.display = activeProvider === 'minimax' ? 'block' : 'none';
+      modalKeyInput.value = sessionKey || '';
+      modalGroupInput.value = sessionGroupId || '';
+      modal.classList.add('open');
+      modalKeyInput.focus();
+    }
+
+    function closeLoginModal() {
+      modal.classList.remove('open');
+    }
+
+    authBtn.addEventListener('click', openLoginModal);
+    modalCancel.addEventListener('click', closeLoginModal);
+
+    modalSave.addEventListener('click', () => {
+      const key = modalKeyInput.value.trim();
+      if (!key) {
+        alert('Please enter a valid API key.');
+        return;
+      }
+      sessionKey = key;
+      if (activeProvider === 'minimax') {
+        sessionGroupId = modalGroupInput.value.trim();
+      }
+      updateAuthBadge();
+      closeLoginModal();
+    });
 
     function setProvider(provider) {
       activeProvider = provider;
@@ -296,27 +516,24 @@
       if (provider === 'elevenlabs') {
         tabEleven.classList.add('active');
         tabMiniMax.classList.remove('active');
-        lblApiKey.innerText = 'ElevenLabs API Key';
-        groupMiniMax.style.display = 'none';
+        modelGroup.style.display = 'block';
 
-        voiceSelect.innerHTML = ELEVEN_VOICES.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
-        apiKeyInput.value = localStorage.getItem('elevenlabs_key') || '';
+        voiceSelect.innerHTML = ELEVEN_VOICES.map(v => 
+          `<option value="${v.id}" ${v.id === 'piTKgcLEGmPE4e6mEKli' ? 'selected' : ''}>${v.name}</option>`
+        ).join('');
       } else {
         tabMiniMax.classList.add('active');
         tabEleven.classList.remove('active');
-        lblApiKey.innerText = 'MiniMax API Key';
-        groupMiniMax.style.display = 'block';
+        modelGroup.style.display = 'none';
 
-        voiceSelect.innerHTML = MINIMAX_VOICES.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
-        apiKeyInput.value = localStorage.getItem('minimax_key') || '';
-        minimaxIdInput.value = localStorage.getItem('minimax_group_id') || '';
+        voiceSelect.innerHTML = MINIMAX_VOICES.map((v, i) => 
+          `<option value="${v.id}" ${i === 0 ? 'selected' : ''}>${v.name}</option>`
+        ).join('');
       }
     }
 
     tabEleven.addEventListener('click', () => setProvider('elevenlabs'));
     tabMiniMax.addEventListener('click', () => setProvider('minimax'));
-
-    setProvider('elevenlabs');
 
     function showStatus(msg, isError = false) {
       statusBox.className = `status-msg ${isError ? 'error' : 'info'}`;
@@ -325,16 +542,15 @@
     }
 
     generateBtn.addEventListener('click', async () => {
-      const text = storyText.value.trim();
-      const apiKey = apiKeyInput.value.trim();
-      const voiceId = voiceSelect.value;
-
-      if (!apiKey) {
-        showStatus('Please enter your API Key.', true);
+      // Prompt modal if API key has not been entered into session memory
+      if (!sessionKey) {
+        openLoginModal();
         return;
       }
+
+      const text = storyText.value.trim();
       if (!text) {
-        showStatus('Please enter some story text.', true);
+        showStatus('Please enter narration text.', true);
         return;
       }
 
@@ -343,76 +559,78 @@
 
       try {
         if (activeProvider === 'elevenlabs') {
-          localStorage.setItem('elevenlabs_key', apiKey);
           showStatus('Synthesizing speech via ElevenLabs...');
+
+          const voiceId = voiceSelect.value;
+          const modelId = modelSelect.value;
 
           const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
             method: 'POST',
             headers: {
-              'xi-api-key': apiKey,
+              'xi-api-key': sessionKey,
               'Content-Type': 'application/json',
               'Accept': 'audio/mpeg'
             },
             body: JSON.stringify({
               text: text,
-              model_id: "eleven_multilingual_v2",
-              voice_settings: { stability: 0.5, similarity_boost: 0.8 }
+              model_id: modelId,
+              voice_settings: {
+                stability: 0.5,
+                similarity_boost: 0.75,
+                style: 0.0,
+                use_speaker_boost: true
+              }
             })
           });
 
           if (!resp.ok) {
-            const errData = await resp.json().catch(() => ({}));
-            throw new Error(errData?.detail?.message || `HTTP ${resp.status}`);
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err?.detail?.message || `HTTP ${resp.status}`);
           }
 
           const blob = await resp.blob();
           bindResult(blob);
 
         } else {
-          // MiniMax synthesis
-          const groupId = minimaxIdInput.value.trim();
-          if (!groupId) {
+          // MiniMax endpoint
+          if (!sessionGroupId) {
+            openLoginModal();
             throw new Error('MiniMax requires a valid Group ID.');
           }
 
-          localStorage.setItem('minimax_key', apiKey);
-          localStorage.setItem('minimax_group_id', groupId);
           showStatus('Synthesizing speech via MiniMax...');
 
-          const resp = await fetch(`https://api.minimaxi.chat/v1/t2a_v2?GroupId=${groupId}`, {
+          const resp = await fetch(`https://api.minimaxi.chat/v1/t2a_v2?GroupId=${sessionGroupId}`, {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${apiKey}`,
+              'Authorization': `Bearer ${sessionKey}`,
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
               model: "speech-01-turbo",
               text: text,
               stream: false,
-              voice_setting: { voice_id: voiceId, speed: 1.0, vol: 1.0, pitch: 0 },
+              voice_setting: { voice_id: voiceSelect.value, speed: 0.85, vol: 1.0, pitch: 0 },
               audio_setting: { sample_rate: 32000, bitrate: 128000, format: "mp3", channel: 1 }
             })
           });
 
-          if (!resp.ok) {
-            throw new Error(`MiniMax returned status ${resp.status}`);
-          }
+          if (!resp.ok) throw new Error(`MiniMax returned HTTP ${resp.status}`);
 
           const data = await resp.json();
           if (data.base_resp && data.base_resp.status_code !== 0) {
-            throw new Error(data.base_resp.status_msg || 'Generation failed');
+            throw new Error(data.base_resp.status_msg || 'Synthesis failed');
           }
 
-          // MiniMax hex payload conversion to blob
           const hex = data.data?.audio;
-          if (!hex) throw new Error('No audio payload received from MiniMax.');
-          
+          if (!hex) throw new Error('No audio bytes returned.');
+
           const bytes = new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
           const blob = new Blob([bytes], { type: 'audio/mpeg' });
           bindResult(blob);
         }
 
-        showStatus('Narration generated successfully!');
+        showStatus('Narration synthesized successfully!');
       } catch (err) {
         showStatus(`Error: ${err.message}`, true);
       } finally {
