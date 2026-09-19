@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Storybook Narration Generator (TTS)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #0f172a;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      padding: 1.5rem;
+    }
+
+    .card {
+      background: rgba(30, 41, 59, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 1.25rem;
+      width: 100%;
+      max-width: 620px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      color: #f8fafc;
+    }
+
+    p.subtitle {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+      line-height: 1.4;
+    }
+
+    .provider-toggle {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      background: #0b0f19;
+      padding: 0.3rem;
+      border-radius: 0.6rem;
+      border: 1px solid #334155;
+    }
+
+    .provider-btn {
+      flex: 1;
+      background: transparent;
+      color: #94a3b8;
+      border: none;
+      padding: 0.6rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 0.4rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .provider-btn.active {
+      background: #4f46e5;
+      color: #fff;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 0.35rem;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.75rem 0.9rem;
+      background: #0b0f19;
+      border: 1px solid #334155;
+      border-radius: 0.6rem;
+      color: #f1f5f9;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #6366f1;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+      line-height: 1.4;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: #4f46e5;
+      color: #ffffff;
+      border: none;
+      padding: 0.85rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 0.6rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: background 0.2s;
+      margin-top: 0.5rem;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      background: #4338ca;
+    }
+
+    .btn-submit:disabled {
+      background: #334155;
+      color: #64748b;
+      cursor: not-allowed;
+    }
+
+    .status-msg {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    .status-msg.error {
+      display: block;
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      color: #fda4af;
+    }
+
+    .status-msg.info {
+      display: block;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #c7d2fe;
+    }
+
+    .result-section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: none;
+    }
+
+    audio {
+      width: 100%;
+      height: 42px;
+      margin-bottom: 1rem;
+    }
+
+    .btn-download {
+      display: block;
+      text-align: center;
+      background: #10b981;
+      color: #ffffff;
+      text-decoration: none;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+
+    .btn-download:hover {
+      background: #059669;
+    }
+
+    .nav-link {
+      display: inline-block;
+      margin-top: 1.5rem;
+      font-size: 0.85rem;
+      color: #818cf8;
+      text-decoration: none;
+    }
+
+    .nav-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>Storybook Narration Generator</h1>
+    <p class="subtitle">Generate high-fidelity audio tracks from story text using ElevenLabs or MiniMax APIs.</p>
+
+    <!-- Provider Selection -->
+    <div class="provider-toggle">
+      <button type="button" class="provider-btn active" id="btn-tab-eleven">ElevenLabs</button>
+      <button type="button" class="provider-btn" id="btn-tab-minimax">MiniMax</button>
+    </div>
+
+    <!-- API Key Input -->
+    <div class="form-group">
+      <label for="api-key" id="lbl-api-key">ElevenLabs API Key</label>
+      <input type="password" id="api-key" placeholder="Enter your API Key..." autocomplete="off" />
+    </div>
+
+    <!-- Voice Selection -->
+    <div class="form-group" id="group-voice">
+      <label for="voice-select">Narrator Voice</label>
+      <select id="voice-select">
+        <!-- Populated dynamically based on provider -->
+      </select>
+    </div>
+
+    <!-- MiniMax Group ID (Only for MiniMax) -->
+    <div class="form-group" id="group-minimax-id" style="display: none;">
+      <label for="minimax-group-id">MiniMax Group ID</label>
+      <input type="text" id="minimax-group-id" placeholder="Enter your Group ID..." />
+    </div>
+
+    <!-- Text to Synthesize -->
+    <div class="form-group">
+      <label for="story-text">Story Text / Dialogue</label>
+      <textarea id="story-text" placeholder="Once upon a time, there was a little crocodile..."></textarea>
+    </div>
+
+    <button class="btn-submit" id="btn-generate">🎙️ Synthesize Narration</button>
+
+    <div id="status-box" class="status-msg"></div>
+
+    <div id="result-box" class="result-section">
+      <audio id="audio-player" controls></audio>
+      <a id="download-audio-btn" class="btn-download" download="soundtrack.mp3">⬇ Download soundtrack.mp3</a>
+    </div>
+
+    <a href="index.html" class="nav-link">← Return to Bookshelf</a>
+  </div>
+
+  <script>
+    let activeProvider = 'elevenlabs';
+
+    const tabEleven = document.getElementById('btn-tab-eleven');
+    const tabMiniMax = document.getElementById('btn-tab-minimax');
+    const lblApiKey = document.getElementById('lbl-api-key');
+    const apiKeyInput = document.getElementById('api-key');
+    const voiceSelect = document.getElementById('voice-select');
+    const groupMiniMax = document.getElementById('group-minimax-id');
+    const minimaxIdInput = document.getElementById('minimax-group-id');
+    const storyText = document.getElementById('story-text');
+    const generateBtn = document.getElementById('btn-generate');
+    const statusBox = document.getElementById('status-box');
+    const resultBox = document.getElementById('result-box');
+    const audioPlayer = document.getElementById('audio-player');
+    const downloadBtn = document.getElementById('download-audio-btn');
+
+    const ELEVEN_VOICES = [
+      { id: "21m00Tcm4TlvDq8ikWAM", name: "Rachel (Calm & Storybook)" },
+      { id: "pNInz6obpgDQGcFmaJgB", name: "Adam (Warm & Deep)" },
+      { id: "ErXwobaYiN019PkySvjV", name: "Antoni (Lively Bedtime)" },
+      { id: "EXAVITQu4vr4xnSDxMaL", name: "Bella (Soft & Gentle)" }
+    ];
+
+    const MINIMAX_VOICES = [
+      { id: "male-qn-qingse", name: "Youth Storyteller (青涩青年)" },
+      { id: "presenter_male", name: "Gentle Narrator (播音男声)" },
+      { id: "presenter_female", name: "Sweet Bedtime Story (甜美童话)" },
+      { id: "audiobook_female_1", name: "Expressive Audio (有声书女)" }
+    ];
+
+    function setProvider(provider) {
+      activeProvider = provider;
+      statusBox.style.display = 'none';
+      resultBox.style.display = 'none';
+
+      if (provider === 'elevenlabs') {
+        tabEleven.classList.add('active');
+        tabMiniMax.classList.remove('active');
+        lblApiKey.innerText = 'ElevenLabs API Key';
+        groupMiniMax.style.display = 'none';
+
+        voiceSelect.innerHTML = ELEVEN_VOICES.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
+        apiKeyInput.value = localStorage.getItem('elevenlabs_key') || '';
+      } else {
+        tabMiniMax.classList.add('active');
+        tabEleven.classList.remove('active');
+        lblApiKey.innerText = 'MiniMax API Key';
+        groupMiniMax.style.display = 'block';
+
+        voiceSelect.innerHTML = MINIMAX_VOICES.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
+        apiKeyInput.value = localStorage.getItem('minimax_key') || '';
+        minimaxIdInput.value = localStorage.getItem('minimax_group_id') || '';
+      }
+    }
+
+    tabEleven.addEventListener('click', () => setProvider('elevenlabs'));
+    tabMiniMax.addEventListener('click', () => setProvider('minimax'));
+
+    setProvider('elevenlabs');
+
+    function showStatus(msg, isError = false) {
+      statusBox.className = `status-msg ${isError ? 'error' : 'info'}`;
+      statusBox.innerText = msg;
+      statusBox.style.display = 'block';
+    }
+
+    generateBtn.addEventListener('click', async () => {
+      const text = storyText.value.trim();
+      const apiKey = apiKeyInput.value.trim();
+      const voiceId = voiceSelect.value;
+
+      if (!apiKey) {
+        showStatus('Please enter your API Key.', true);
+        return;
+      }
+      if (!text) {
+        showStatus('Please enter some story text.', true);
+        return;
+      }
+
+      generateBtn.disabled = true;
+      resultBox.style.display = 'none';
+
+      try {
+        if (activeProvider === 'elevenlabs') {
+          localStorage.setItem('elevenlabs_key', apiKey);
+          showStatus('Synthesizing speech via ElevenLabs...');
+
+          const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+            method: 'POST',
+            headers: {
+              'xi-api-key': apiKey,
+              'Content-Type': 'application/json',
+              'Accept': 'audio/mpeg'
+            },
+            body: JSON.stringify({
+              text: text,
+              model_id: "eleven_multilingual_v2",
+              voice_settings: { stability: 0.5, similarity_boost: 0.8 }
+            })
+          });
+
+          if (!resp.ok) {
+            const errData = await resp.json().catch(() => ({}));
+            throw new Error(errData?.detail?.message || `HTTP ${resp.status}`);
+          }
+
+          const blob = await resp.blob();
+          bindResult(blob);
+
+        } else {
+          // MiniMax synthesis
+          const groupId = minimaxIdInput.value.trim();
+          if (!groupId) {
+            throw new Error('MiniMax requires a valid Group ID.');
+          }
+
+          localStorage.setItem('minimax_key', apiKey);
+          localStorage.setItem('minimax_group_id', groupId);
+          showStatus('Synthesizing speech via MiniMax...');
+
+          const resp = await fetch(`https://api.minimaxi.chat/v1/t2a_v2?GroupId=${groupId}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: "speech-01-turbo",
+              text: text,
+              stream: false,
+              voice_setting: { voice_id: voiceId, speed: 1.0, vol: 1.0, pitch: 0 },
+              audio_setting: { sample_rate: 32000, bitrate: 128000, format: "mp3", channel: 1 }
+            })
+          });
+
+          if (!resp.ok) {
+            throw new Error(`MiniMax returned status ${resp.status}`);
+          }
+
+          const data = await resp.json();
+          if (data.base_resp && data.base_resp.status_code !== 0) {
+            throw new Error(data.base_resp.status_msg || 'Generation failed');
+          }
+
+          // MiniMax hex payload conversion to blob
+          const hex = data.data?.audio;
+          if (!hex) throw new Error('No audio payload received from MiniMax.');
+          
+          const bytes = new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+          const blob = new Blob([bytes], { type: 'audio/mpeg' });
+          bindResult(blob);
+        }
+
+        showStatus('Narration generated successfully!');
+      } catch (err) {
+        showStatus(`Error: ${err.message}`, true);
+      } finally {
+        generateBtn.disabled = false;
+      }
+    });
+
+    function bindResult(blob) {
+      const audioUrl = URL.createObjectURL(blob);
+      audioPlayer.src = audioUrl;
+      downloadBtn.href = audioUrl;
+      resultBox.style.display = 'block';
+      audioPlayer.play().catch(() => {});
+    }
+  </script>
+</body>
+</html>
