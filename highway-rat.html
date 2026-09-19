@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Highway Rat - Interactive Audio Flipbook</title>
+
+  <!-- StPageFlip Engine -->
+  <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #1a1a1f;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      color: #fff;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 100;
+    }
+
+    .top-bar h1 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+
+    .btn-back {
+      background: #334155;
+      color: #f8fafc;
+      text-decoration: none;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 9999px;
+      transition: background 0.2s;
+    }
+
+    .btn-back:hover {
+      background: #475569;
+    }
+
+    /* Guaranteed Flipbook Stage */
+    .stage-wrapper {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 76vh;
+      margin-top: 30px;
+    }
+
+    #flipbook {
+      width: 960px;
+      height: 640px;
+      max-width: 95vw;
+      max-height: 75vh;
+    }
+
+    /* Floating Controls Bar */
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      background: rgba(15, 23, 42, 0.9);
+      padding: 0.75rem 1.8rem;
+      border-radius: 9999px;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      z-index: 100;
+    }
+
+    button {
+      background: #d97706;
+      color: #ffffff;
+      border: none;
+      padding: 0.65rem 1.35rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    button:hover {
+      background: #b45309;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    .status {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      min-width: 180px;
+      text-align: center;
+      user-select: none;
+    }
+
+    .status small {
+      display: block;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="top-bar">
+    <a href="index.html" class="btn-back">← Bookshelf</a>
+    <h1>The Highway Rat</h1>
+    <a href="download.html" style="color:#94a3b8; font-size:0.8rem; text-decoration:none;">MP3 Tool</a>
+  </header>
+
+  <div class="stage-wrapper">
+    <div id="flipbook"></div>
+  </div>
+
+  <audio id="soundtrack" src="books/highway-rat/soundtrack.mp3" preload="auto"></audio>
+
+  <div class="controls">
+    <button id="btn-prev">‹ Prev</button>
+    <button id="btn-play">▶ Play Story</button>
+    <button id="btn-next">Next ›</button>
+    <div class="status">
+      <span id="page-title">Front Cover</span>
+      <small id="audio-time">0:00 / 0:00</small>
+    </div>
+  </div>
+
+  <script>
+    const TOTAL_PAGES = 32;
+    const PAGES_DIR = 'books/highway-rat/pages';
+
+    // Cue points mapped to spreads and spoken verses
+    const cuePoints = [
+      { pageIndex: 0,  startTime: 0.0,   endTime: 16.0,  title: "Front Cover" },
+      { pageIndex: 1,  startTime: 16.0,  endTime: 24.0,  title: "Endpaper" },
+      { pageIndex: 3,  startTime: 24.0,  endTime: 48.0,  title: "The Highway Rat was a Baddie" },
+      { pageIndex: 5,  startTime: 48.0,  endTime: 78.0,  title: "Give Me Your Clover!" },
+      { pageIndex: 7,  startTime: 78.0,  endTime: 108.0, title: "Give Me Your Nuts!" },
+      { pageIndex: 9,  startTime: 108.0, endTime: 138.0, title: "Give Me Your Leaves!" },
+      { pageIndex: 11, startTime: 138.0, endTime: 168.0, title: "The Creatures Grew Thinner" },
+      { pageIndex: 13, startTime: 168.0, endTime: 202.0, title: "Along Came a Duck" },
+      { pageIndex: 15, startTime: 202.0, endTime: 236.0, title: "The Sister with the Cake" },
+      { pageIndex: 17, startTime: 236.0, endTime: 270.0, title: "The Echo in the Cave" },
+      { pageIndex: 19, startTime: 270.0, endTime: 298.0, title: "The Duck Gallops Away" },
+      { pageIndex: 21, startTime: 298.0, endTime: 326.0, title: "The Great Woodland Feast" },
+      { pageIndex: 23, startTime: 326.0, endTime: 350.0, title: "Lost in the Mountain" },
+      { pageIndex: 25, startTime: 350.0, endTime: 376.0, title: "Sweeping the Cake Shop" },
+      { pageIndex: 27, startTime: 376.0, endTime: 400.0, title: "Bedtime Outro" },
+      { pageIndex: 31, startTime: 400.0, endTime: 999.0, title: "Back Cover" }
+    ];
+
+    const bookContainer = document.getElementById('flipbook');
+    const audio = document.getElementById('soundtrack');
+    const playBtn = document.getElementById('btn-play');
+    const prevBtn = document.getElementById('btn-prev');
+    const nextBtn = document.getElementById('btn-next');
+    const pageTitle = document.getElementById('page-title');
+    const audioTime = document.getElementById('audio-time');
+
+    let isAudioTurning = false;
+    let isUserSeeking = false;
+
+    function getSpreadIndex(page) {
+      if (page <= 0) return 0;
+      if (page >= TOTAL_PAGES - 1) return TOTAL_PAGES - 1;
+      return page % 2 === 1 ? page : page - 1;
+    }
+
+    function getCueForSpread(spreadIdx) {
+      return cuePoints.find(c => c.pageIndex === spreadIdx) || cuePoints[0];
+    }
+
+    function getCueForTime(time) {
+      let matched = cuePoints[0];
+      for (let i = 0; i < cuePoints.length; i++) {
+        if (time >= cuePoints[i].startTime) {
+          matched = cuePoints[i];
+        } else {
+          break;
+        }
+      }
+      return matched;
+    }
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    // Initialize PageFlip
+    const pageFlip = new St.PageFlip(bookContainer, {
+      width: 480,
+      height: 640,
+      size: "stretch",
+      minWidth: 320,
+      maxWidth: 600,
+      minHeight: 440,
+      maxHeight: 840,
+      showCover: true,
+      drawShadow: true,
+      flippingTime: 700,
+      usePortrait: false,
+      maxShadowOpacity: 0.35
+    });
+
+    const pageImages = [];
+    for (let i = 0; i < TOTAL_PAGES; i++) {
+      pageImages.push(`${PAGES_DIR}/page-${i}.webp?v=1`);
+    }
+
+    // Attempt to load pages with fallback to root pages/ if subfolder not populated yet
+    fetch(pageImages[0], { method: 'HEAD' })
+      .then(res => {
+        if (!res.ok) {
+          console.warn("Highway Rat folder not yet populated. Loading placeholder assets.");
+          const fallbackImages = [];
+          for (let i = 0; i < 31; i++) {
+            fallbackImages.push(`pages/page-${i}.webp?v=2`);
+          }
+          pageFlip.loadFromImages(fallbackImages);
+        } else {
+          pageFlip.loadFromImages(pageImages);
+        }
+      })
+      .catch(() => {
+        const fallbackImages = [];
+        for (let i = 0; i < 31; i++) {
+          fallbackImages.push(`pages/page-${i}.webp?v=2`);
+        }
+        pageFlip.loadFromImages(fallbackImages);
+      });
+
+    pageFlip.on('changeState', (e) => {
+      if (e.data === 'read') {
+        isAudioTurning = false;
+        const spread = getSpreadIndex(pageFlip.getCurrentPageIndex());
+        pageTitle.innerText = getCueForSpread(spread).title;
+      }
+    });
+
+    // Audio -> Flip Synchronization
+    audio.addEventListener('timeupdate', () => {
+      audioTime.innerText = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration || 0)}`;
+      const currentCue = getCueForTime(audio.currentTime);
+      pageTitle.innerText = currentCue.title;
+
+      if (audio.paused || isUserSeeking) return;
+
+      const currentVisibleSpread = getSpreadIndex(pageFlip.getCurrentPageIndex());
+      if (currentVisibleSpread !== currentCue.pageIndex && !isAudioTurning) {
+        isAudioTurning = true;
+        pageFlip.flip(currentCue.pageIndex);
+      }
+    });
+
+    // Manual Flip -> Audio Seek
+    pageFlip.on('flip', (e) => {
+      const spread = getSpreadIndex(e.data);
+      pageTitle.innerText = getCueForSpread(spread).title;
+
+      if (!isAudioTurning) {
+        const cue = getCueForSpread(spread);
+        isUserSeeking = true;
+        audio.currentTime = cue.startTime;
+        setTimeout(() => { isUserSeeking = false; }, 300);
+      }
+    });
+
+    prevBtn.addEventListener('click', () => pageFlip.flipPrev());
+    nextBtn.addEventListener('click', () => pageFlip.flipNext());
+
+    playBtn.addEventListener('click', () => {
+      if (audio.paused) {
+        const currentSpread = getSpreadIndex(pageFlip.getCurrentPageIndex());
+        const cue = getCueForSpread(currentSpread);
+
+        if (audio.currentTime < cue.startTime || audio.currentTime >= cue.endTime) {
+          audio.currentTime = cue.startTime;
+        }
+        audio.play().then(() => {
+          playBtn.innerText = '❚❚ Pause';
+        }).catch(err => {
+          console.warn("Audio play blocked or file not found:", err);
+          alert("Audio soundtrack not found. Place 'soundtrack.mp3' in 'books/highway-rat/'.");
+        });
+      } else {
+        audio.pause();
+        playBtn.innerText = '▶ Play Story';
+      }
+    });
+
+    audio.addEventListener('ended', () => {
+      playBtn.innerText = '▶ Play Story';
+    });
+  </script>
+</body>
+</html>
