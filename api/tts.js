@@ -2,6 +2,23 @@ export const config = {
   runtime: 'edge',
 };
 
+// Generates an exact 8.0-second MPEG-2 Layer 3 silent frame buffer (24kHz, 32kbps mono)
+function get8SecondMp3Silence() {
+  const frame = new Uint8Array(96);
+  frame[0] = 0xFF;
+  frame[1] = 0xF3;
+  frame[2] = 0x40;
+  frame[3] = 0xC4;
+  // bytes 4..95 remain 0x00 for complete digital silence
+
+  const frameCount = 334; // 334 frames * 0.024s = 8.016 seconds
+  const silenceBuffer = new Uint8Array(frameCount * 96);
+  for (let i = 0; i < frameCount; i++) {
+    silenceBuffer.set(frame, i * 96);
+  }
+  return silenceBuffer;
+}
+
 export default async function handler(req) {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), { 
@@ -20,45 +37,61 @@ export default async function handler(req) {
       });
     }
 
-    // 1. Cantonese Cloud Engine (Splits & merges audio chunks into a valid MP3)
+    // 1. Cantonese Audio Generator (Handles 8-second break tags with true MP3 silence)
     if (provider === 'cantonese') {
       const targetLang = lang || 'zh-HK';
 
-      // Split text into natural sentence chunks under 70 characters
-      const sentences = text
-        .replace(/\r\n/g, '\n')
-        .split(/([，。！？；、\n]+)/)
+      // Split text on the 8s break tags into distinct paragraphs
+      const paragraphs = text
+        .split(/<break[^>]*\/>/i)
+        .map(p => p.trim())
         .filter(Boolean);
 
-      const chunks = [];
-      let current = '';
-
-      for (const s of sentences) {
-        if ((current + s).length > 60) {
-          if (current.trim()) chunks.push(current.trim());
-          current = s;
-        } else {
-          current += s;
-        }
-      }
-      if (current.trim()) chunks.push(current.trim());
-
       const audioBuffers = [];
+      const silenceChunk = get8SecondMp3Silence();
 
-      for (const chunk of chunks) {
-        if (!chunk.replace(/[，。！？；、\s]/g, '')) continue;
-        const ttsUrl = `https://translate.google.com/translate_tts?client=gtx&ie=UTF-8&tl=${encodeURIComponent(targetLang)}&q=${encodeURIComponent(chunk)}`;
-        
-        const resp = await fetch(ttsUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Referer': 'https://translate.google.com/'
+      for (let pIdx = 0; pIdx < paragraphs.length; pIdx++) {
+        const paragraph = paragraphs[pIdx];
+
+        // Slices into sentence clauses under 60 chars for Google TTS
+        const clauses = paragraph
+          .replace(/\r\n/g, '\n')
+          .split(/([，。！？；、\n]+)/)
+          .filter(Boolean);
+
+        const chunks = [];
+        let current = '';
+        for (const c of clauses) {
+          if ((current + c).length > 55) {
+            if (current.trim()) chunks.push(current.trim());
+            current = c;
+          } else {
+            current += c;
           }
-        });
+        }
+        if (current.trim()) chunks.push(current.trim());
 
-        if (resp.ok) {
-          const buf = await resp.arrayBuffer();
-          audioBuffers.push(buf);
+        // Synthesize each clause of this paragraph
+        for (const chunk of chunks) {
+          if (!chunk.replace(/[，。！？；、\s]/g, '')) continue;
+          const ttsUrl = `https://translate.google.com/translate_tts?client=gtx&ie=UTF-8&tl=${encodeURIComponent(targetLang)}&q=${encodeURIComponent(chunk)}`;
+          
+          const resp = await fetch(ttsUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Referer': 'https://translate.google.com/'
+            }
+          });
+
+          if (resp.ok) {
+            const buf = await resp.arrayBuffer();
+            audioBuffers.push(new Uint8Array(buf));
+          }
+        }
+
+        // Insert 8 seconds of silent audio between paragraphs (except after the final paragraph)
+        if (pIdx < paragraphs.length - 1) {
+          audioBuffers.push(silenceChunk);
         }
       }
 
@@ -66,12 +99,12 @@ export default async function handler(req) {
         throw new Error('Failed to generate Cantonese audio chunks from TTS engine.');
       }
 
-      // Concatenate all MP3 binary chunks into a single audio file
+      // Concatenate all speech and 8s silence buffers into a single MP3 file
       const totalLength = audioBuffers.reduce((acc, b) => acc + b.byteLength, 0);
       const combined = new Uint8Array(totalLength);
       let offset = 0;
       for (const b of audioBuffers) {
-        combined.set(new Uint8Array(b), offset);
+        combined.set(b, offset);
         offset += b.byteLength;
       }
 
@@ -85,7 +118,7 @@ export default async function handler(req) {
       });
     }
 
-    // 2. ElevenLabs English Engine
+    // 2. ElevenLabs English Engine (Supports native SSML break tags)
     const apiKey = process.env.ELEVENLABS_API_KEY || 'sk_6f8a081139816a1b900b65445b32e4aecf3a331d2635c2eb';
     const targetVoice = voice_id && voice_id !== 'piTKgcLEGmPE4e6mEKli' ? voice_id : '21m00Tcm4TlvDq8ikWAM';
 

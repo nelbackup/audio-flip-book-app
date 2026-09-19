@@ -24,13 +24,14 @@
       padding: 2.25rem;
       border-radius: 1.25rem;
       width: 100%;
-      max-width: 680px;
+      max-width: 720px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     }
     .card-header { margin-bottom: 1.25rem; }
     h1 { font-size: 1.4rem; font-weight: 700; color: #f8fafc; }
     p.subtitle { font-size: 0.85rem; color: #94a3b8; margin-top: 0.25rem; line-height: 1.4; }
 
+    /* Provider Selector */
     .provider-toggle {
       display: flex;
       gap: 0.5rem;
@@ -67,7 +68,16 @@
       outline: none;
       font-family: inherit;
     }
-    textarea { resize: vertical; min-height: 140px; line-height: 1.5; }
+    textarea { resize: vertical; min-height: 110px; line-height: 1.5; }
+
+    /* Converted box highlight styling */
+    textarea.converted-box {
+      background: #080c14;
+      border-color: #3b82f6;
+      color: #93c5fd;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.82rem;
+    }
 
     .stream-trigger-btn {
       width: 100%;
@@ -84,6 +94,7 @@
       justify-content: center;
       gap: 0.5rem;
       margin-top: 0.5rem;
+      transition: background 0.2s;
     }
     .stream-trigger-btn:hover:not(:disabled) { background: #4338ca; }
     .stream-trigger-btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
@@ -140,9 +151,7 @@
       text-align: center;
       margin-top: 0.5rem;
     }
-    .download-path-hint code {
-      color: #38bdf8;
-    }
+    .download-path-hint code { color: #38bdf8; }
 
     .tier-alert {
       margin-top: 1rem;
@@ -194,30 +203,40 @@
       <p class="subtitle">Direct chunked audio synthesis with embedded API backend.</p>
     </div>
 
-    <!-- Provider Tabs -->
+    <!-- Provider Tabs (English active by default) -->
     <div class="provider-toggle">
-      <button type="button" class="provider-btn" id="btn-tab-eleven">🇬🇧 English (ElevenLabs)</button>
-      <button type="button" class="provider-btn active" id="btn-tab-cantonese">🇭🇰 Cantonese (Free Cloud MP3)</button>
+      <button type="button" class="provider-btn active" id="btn-tab-eleven">🇬🇧 English (ElevenLabs)</button>
+      <button type="button" class="provider-btn" id="btn-tab-cantonese">🇭🇰 Chinese (Cantonese Audio Generator)</button>
     </div>
 
     <!-- Voice Selection -->
     <div class="form-group">
       <label for="voice-select">
         <span>Narrator Voice</span>
-        <span id="voice-tag" style="color: #38bdf8; font-size: 0.75rem;">Cantonese Cloud MP3</span>
+        <span id="voice-tag" style="color: #38bdf8; font-size: 0.75rem;">Rachel (Default)</span>
       </label>
       <select id="voice-select"></select>
     </div>
 
-    <!-- Script Text Area -->
+    <!-- 1. Raw User Input Text Box -->
     <div class="form-group">
       <label for="story-text">
-        <span>Story Script</span>
+        <span>Story Script (User Input)</span>
         <span id="char-counter" style="color: #94a3b8; font-size: 0.75rem;">0 characters</span>
       </label>
-      <textarea id="story-text"></textarea>
+      <textarea id="story-text" placeholder="Type or paste your narrative paragraphs here..."></textarea>
     </div>
 
+    <!-- 2. Dynamically Converted Text Box (with 8s break tags) -->
+    <div class="form-group">
+      <label for="converted-text">
+        <span style="color: #60a5fa;">Converted Script (8s Break Tags between paragraphs)</span>
+        <span id="converted-char-counter" style="color: #94a3b8; font-size: 0.75rem;">0 characters</span>
+      </label>
+      <textarea id="converted-text" class="converted-box" placeholder="Formatted text with 8-second break tags will automatically update here..."></textarea>
+    </div>
+
+    <!-- 3. Prepare MP3 Button (synthesizes converted text) -->
     <button class="stream-trigger-btn" id="btn-stream">⚡ Synthesize & Prepare MP3</button>
 
     <div id="tier-alert-box" class="tier-alert"></div>
@@ -242,7 +261,7 @@
     <a href="index.html" class="nav-link">← Return to Bookshelf</a>
   </div>
 
-  <!-- Local Save Instructions Popup Modal -->
+  <!-- Local Save Guidance Modal -->
   <div id="download-modal" class="modal-backdrop">
     <div class="modal">
       <h2>🎉 Audio Prepared Successfully!</h2>
@@ -254,16 +273,20 @@
   </div>
 
   <script>
-    let activeProvider = 'cantonese';
+    // 1. English tab is default
+    let activeProvider = 'elevenlabs';
 
     const tabEleven = document.getElementById('btn-tab-eleven');
     const tabCantonese = document.getElementById('btn-tab-cantonese');
     const voiceSelect = document.getElementById('voice-select');
     const voiceTag = document.getElementById('voice-tag');
+
     const storyText = document.getElementById('story-text');
     const charCounter = document.getElementById('char-counter');
-    const streamBtn = document.getElementById('btn-stream');
+    const convertedText = document.getElementById('converted-text');
+    const convertedCharCounter = document.getElementById('converted-char-counter');
 
+    const streamBtn = document.getElementById('btn-stream');
     const alertBox = document.getElementById('tier-alert-box');
     const monitor = document.getElementById('stream-monitor');
     const streamStatus = document.getElementById('stream-status');
@@ -275,13 +298,16 @@
     const downloadModal = document.getElementById('download-modal');
     const closeModalBtn = document.getElementById('btn-close-modal');
 
-    const CANTONESE_SCRIPT = `喺失物招領嘅枱上面，有四個書包。書包上面嘅名牌甩咗出嚟，所以我們要幫同學仔搵返佢哋嘅書包。請大家仔細聽清楚喇！
-
-首先，我哋睇下阿妮嘅書包。阿妮同老師講，佢嘅書包唔係綠色，亦都唔係藍色。書包入面有一支水樽同三把尺。佢每日上數學堂都會用到呢啲尺。`;
+    // 8-second break tag (chained 3s + 3s + 2s to comply with ElevenLabs 3s per-tag limit)
+    const BREAK_TAG_8S = '<break time="3s" /> <break time="3s" /> <break time="2s" />';
 
     const ENGLISH_SCRIPT = `The first day of November is a special day for Emily. It is her lucky day because she won a drawing competition at school. Draw a star on 1st November.
 
 The next day is even more exciting. 2nd November is Emily's birthday. She will celebrate with her family and friends. Draw a birthday cake on 2nd November.`;
+
+    const CANTONESE_SCRIPT = `喺失物招領嘅枱上面，有四個書包。書包上面嘅名牌甩咗出嚟，所以我們要幫同學仔搵返佢哋嘅書包。請大家仔細聽清楚喇！
+
+首先，我哋睇下阿妮嘅書包。阿妮同老師講，佢嘅書包唔係綠色，亦都唔係藍色。書包入面有一支水樽同三把尺。佢每日上數學堂都會用到呢啲尺。`;
 
     const ELEVEN_VOICES = [
       { id: "21m00Tcm4TlvDq8ikWAM", name: "Rachel - Calm & Storybook (Default Free-Tier Safe)" },
@@ -290,34 +316,57 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
     ];
 
     const CANTONESE_VOICES = [
-      { id: "zh-HK", name: "🇭🇰 Hong Kong Cantonese Story Voice (Direct MP3)" },
-      { id: "zh-TW", name: "🇨🇳 Traditional Chinese Narration (Direct MP3)" }
+      { id: "zh-HK", name: "🇭🇰 Hong Kong Cantonese Story Voice (Direct MP3 · 8s Silence Pauses)" },
+      { id: "zh-TW", name: "🇨🇳 Traditional Chinese Narration (Direct MP3 · 8s Silence Pauses)" },
+      { id: "open_minimax", name: "↗ Open MiniMax Studio (Professional Reporter · 9,144 Credits)" }
     ];
 
-    function updateCounter() {
-      charCounter.innerText = `${storyText.value.length} characters`;
+    // 2. Dynamic conversion: detects paragraphs and inserts 8-second break tags
+    function updateConvertedText() {
+      const raw = storyText.value;
+      charCounter.innerText = `${raw.length} characters`;
+
+      if (!raw.trim()) {
+        convertedText.value = '';
+        convertedCharCounter.innerText = '0 characters';
+        return;
+      }
+
+      const hasDoubleNewline = /\n\s*\n/.test(raw);
+      const paragraphs = raw
+        .split(hasDoubleNewline ? /\n\s*\n/ : /\n+/)
+        .map(p => p.trim())
+        .filter(Boolean);
+
+      convertedText.value = paragraphs.join(`\n\n${BREAK_TAG_8S}\n\n`);
+      convertedCharCounter.innerText = `${convertedText.value.length} characters`;
     }
-    storyText.addEventListener('input', updateCounter);
+
+    storyText.addEventListener('input', updateConvertedText);
+    convertedText.addEventListener('input', () => {
+      convertedCharCounter.innerText = `${convertedText.value.length} characters`;
+    });
 
     function setProvider(provider) {
       activeProvider = provider;
       alertBox.style.display = 'none';
       monitor.style.display = 'none';
 
-      if (provider === 'cantonese') {
-        tabCantonese.classList.add('active');
-        tabEleven.classList.remove('active');
-        voiceTag.innerText = 'Cantonese Cloud MP3';
-        voiceSelect.innerHTML = CANTONESE_VOICES.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
-        storyText.value = CANTONESE_SCRIPT;
-      } else {
+      if (provider === 'elevenlabs') {
         tabEleven.classList.add('active');
         tabCantonese.classList.remove('active');
         voiceTag.innerText = 'Rachel (Default)';
         voiceSelect.innerHTML = ELEVEN_VOICES.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
         storyText.value = ENGLISH_SCRIPT;
+      } else {
+        tabCantonese.classList.add('active');
+        tabEleven.classList.remove('active');
+        voiceTag.innerText = 'Cantonese Audio Generator';
+        voiceSelect.innerHTML = CANTONESE_VOICES.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
+        storyText.value = CANTONESE_SCRIPT;
       }
-      updateCounter();
+
+      updateConvertedText();
     }
 
     tabEleven.addEventListener('click', () => setProvider('elevenlabs'));
@@ -325,11 +374,19 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
 
     closeModalBtn.addEventListener('click', () => downloadModal.classList.remove('open'));
 
+    // 3. Prepare MP3 Button: references the CONVERTED text box
     streamBtn.addEventListener('click', async () => {
-      const text = storyText.value.trim();
-      if (!text) {
+      // Quick MiniMax Studio launch if selected
+      if (activeProvider === 'cantonese' && voiceSelect.value === 'open_minimax') {
+        window.open('https://www.minimax.io/audio', '_blank');
+        return;
+      }
+
+      const textToSynthesize = convertedText.value.trim();
+
+      if (!textToSynthesize) {
         alertBox.className = 'tier-alert error';
-        alertBox.innerText = 'Please enter narration text.';
+        alertBox.innerText = 'Please enter narration text in the story input box.';
         alertBox.style.display = 'block';
         return;
       }
@@ -339,13 +396,15 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
       monitor.style.display = 'block';
       downloadBtn.style.display = 'none';
       downloadHint.style.display = 'none';
-      streamStatus.innerText = 'Synthesizing soundtrack via server...';
+      streamStatus.innerText = activeProvider === 'cantonese'
+        ? 'Synthesizing Cantonese soundtrack with 8-second pauses...'
+        : 'Synthesizing English soundtrack from converted script...';
       streamStats.innerText = 'Buffering binary...';
 
       try {
         const payload = activeProvider === 'cantonese'
-          ? { text, provider: 'cantonese', lang: voiceSelect.value }
-          : { text, provider: 'elevenlabs', voice_id: voiceSelect.value };
+          ? { text: textToSynthesize, provider: 'cantonese', lang: voiceSelect.value }
+          : { text: textToSynthesize, provider: 'elevenlabs', voice_id: voiceSelect.value };
 
         const response = await fetch('/api/tts', {
           method: 'POST',
@@ -359,24 +418,24 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
         }
 
         const audioBlob = await response.blob();
-        if (audioBlob.size === 0) throw new Error('Received empty audio stream from TTS server.');
+        if (audioBlob.size === 0) throw new Error('Received empty audio stream from server.');
 
         const audioUrl = URL.createObjectURL(audioBlob);
 
-        // 1. Audio player playback
+        // Playback
         audioPlayer.src = audioUrl;
         audioPlayer.play().catch(() => {});
 
-        // 2. Download button
+        // Download button
         downloadBtn.href = audioUrl;
         downloadBtn.setAttribute('download', 'soundtrack.mp3');
         downloadBtn.style.display = 'flex';
         downloadHint.style.display = 'block';
 
-        streamStatus.innerText = 'Narration synthesized successfully!';
+        streamStatus.innerText = 'Soundtrack ready with 8s break intervals!';
         streamStats.innerText = `Size: ${(audioBlob.size / 1024).toFixed(1)} KB`;
 
-        // 3. Trigger direct browser download
+        // Direct browser file download trigger
         const autoLink = document.createElement('a');
         autoLink.href = audioUrl;
         autoLink.download = 'soundtrack.mp3';
@@ -384,7 +443,6 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
         autoLink.click();
         document.body.removeChild(autoLink);
 
-        // 4. Modal showing user default downloads directory
         downloadModal.classList.add('open');
 
       } catch (err) {
@@ -397,7 +455,8 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
       }
     });
 
-    setProvider('cantonese');
+    // Initialize English view by default
+    setProvider('elevenlabs');
   </script>
 </body>
 </html>
