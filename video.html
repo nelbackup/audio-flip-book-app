@@ -30,7 +30,7 @@
       padding: 2.25rem;
       border-radius: 1.25rem;
       width: 100%;
-      max-width: 680px;
+      max-width: 720px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     }
 
@@ -108,7 +108,7 @@
       background: #4338ca;
     }
 
-    /* Video Preview Card */
+    /* Video Preview Box */
     .preview-box {
       margin-top: 1.25rem;
       background: #0b0f19;
@@ -155,6 +155,7 @@
       margin-top: 1.5rem;
       border-bottom: 1px solid #334155;
       padding-bottom: 0.5rem;
+      overflow-x: auto;
     }
 
     .tab-btn {
@@ -163,9 +164,10 @@
       color: #94a3b8;
       font-size: 0.85rem;
       font-weight: 600;
-      padding: 0.4rem 0.8rem;
+      padding: 0.45rem 0.85rem;
       border-radius: 0.4rem;
       cursor: pointer;
+      white-space: nowrap;
       transition: all 0.2s;
     }
 
@@ -273,7 +275,7 @@
   <div class="card">
     <div class="card-header">
       <h1>🎬 Offline Video Preparation</h1>
-      <p class="subtitle">Extract studio soundtrack audio and picture book video slides from YouTube for offline flipbook narration.</p>
+      <p class="subtitle">Extract high-resolution MP4 video, narration soundtracks, and book slide frames from YouTube for offline reading.</p>
     </div>
 
     <!-- YouTube URL Input -->
@@ -294,7 +296,7 @@
       </div>
     </div>
 
-    <!-- Output Sub-folder Name -->
+    <!-- Output Folder Name -->
     <div class="form-group" style="margin-top: 1.25rem;">
       <label for="folder-name">Target Story Directory Name (inside <code>books/</code>)</label>
       <input type="text" id="folder-name" value="my-story" placeholder="e.g. the-gruffalo or highway-rat" />
@@ -302,43 +304,53 @@
 
     <!-- Extraction Workflow Tabs -->
     <div class="tabs">
-      <button type="button" class="tab-btn active" data-tab="tab-audio">🎵 Extract Audio (MP3)</button>
+      <button type="button" class="tab-btn active" data-tab="tab-video">📹 Download Video (MP4)</button>
+      <button type="button" class="tab-btn" data-tab="tab-audio">🎵 Extract Audio (MP3)</button>
       <button type="button" class="tab-btn" data-tab="tab-frames">🖼️ Extract Video Slides</button>
       <button type="button" class="tab-btn" data-tab="tab-script">🐍 One-Click Python Script</button>
     </div>
 
-    <!-- Tab 1: Audio Extraction Command -->
-    <div class="tab-content active" id="tab-audio">
-      <p class="helper-notes">Run this command in Command Prompt to extract the audio stream as <strong>soundtrack.mp3</strong>:</p>
+    <!-- Tab 1: MP4 Video Extraction -->
+    <div class="tab-content active" id="tab-video">
+      <p class="helper-notes">Download the highest resolution video merged with full audio as a standalone <strong>.mp4</strong> file:</p>
+      <div class="code-block-wrapper">
+        <button class="btn-copy" onclick="copyCode('code-video')">📋 Copy Command</button>
+        <pre id="code-video">yt-dlp -f "bv*[ext=mp4]+ba*[ext=m4a]/b[ext=mp4]/best" --merge-output-format mp4 -o "books/my-story/story_video.mp4" "https://www.youtube.com/watch?v=..."</pre>
+      </div>
+
+      <p class="helper-notes" style="margin-top: 1rem;">Direct browser download tools (no CLI needed):</p>
+      <div class="web-links-group">
+        <a href="https://cobalt.tools" target="_blank" class="web-link">⚡ Cobalt (Select MP4 / Best Quality)</a>
+        <a href="https://y2meta.tube" target="_blank" class="web-link">📥 Web MP4 Downloader</a>
+      </div>
+    </div>
+
+    <!-- Tab 2: Audio Extraction Command -->
+    <div class="tab-content" id="tab-audio">
+      <p class="helper-notes">Extract the isolated audio narration stream directly into <strong>soundtrack.mp3</strong>:</p>
       <div class="code-block-wrapper">
         <button class="btn-copy" onclick="copyCode('code-audio')">📋 Copy Command</button>
         <pre id="code-audio">yt-dlp -x --audio-format mp3 -o "books/my-story/soundtrack.mp3" "https://www.youtube.com/watch?v=..."</pre>
       </div>
-
-      <p class="helper-notes" style="margin-top: 1rem;">Or open in web-based offline audio extractors:</p>
-      <div class="web-links-group">
-        <a id="link-cobalt" href="https://cobalt.tools" target="_blank" class="web-link">⚡ Cobalt Downloader</a>
-        <a id="link-dir" href="https://y2meta.tube" target="_blank" class="web-link">📥 Web Audio Extractor</a>
-      </div>
     </div>
 
-    <!-- Tab 2: Video Slides / Frame Extraction -->
+    <!-- Tab 3: Video Slides / Frame Extraction -->
     <div class="tab-content" id="tab-frames">
-      <p class="helper-notes">Download the highest quality MP4 video, then dump video frames as storybook pages (e.g. 1 frame every 4 seconds):</p>
+      <p class="helper-notes">Download the video and automatically extract illustration frames at regular intervals (1 frame every 4 seconds):</p>
       <div class="code-block-wrapper">
         <button class="btn-copy" onclick="copyCode('code-frames')">📋 Copy Command</button>
-        <pre id="code-frames"># 1. Download video
-yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" -o "temp_video.mp4" "https://www.youtube.com/watch?v=..."
+        <pre id="code-frames"># 1. Download source MP4 video
+yt-dlp -f "bv*[ext=mp4]+ba*[ext=m4a]/b[ext=mp4]" --merge-output-format mp4 -o "temp_video.mp4" "https://www.youtube.com/watch?v=..."
 
-# 2. Extract slides into pages directory (1 frame every 4 seconds)
-mkdir books\my-story\pages
+# 2. Extract slides into pages directory
+if not exist "books\my-story\pages" mkdir "books\my-story\pages"
 ffmpeg -i temp_video.mp4 -vf "fps=1/4" -q:v 2 books/my-story/pages/page-%03d.webp</pre>
       </div>
     </div>
 
-    <!-- Tab 3: Python Automated Preparation Pipeline -->
+    <!-- Tab 4: Python Automated Preparation Pipeline -->
     <div class="tab-content" id="tab-script">
-      <p class="helper-notes">Save this local script as <strong>prepare_story.py</strong> to download, extract soundtrack, and crop pages automatically in one step:</p>
+      <p class="helper-notes">Run this automated Python script locally to download the MP4 video, isolate the soundtrack, and export page frames in a single run:</p>
       <div class="code-block-wrapper">
         <button class="btn-copy" onclick="copyCode('code-python')">📋 Copy Python</button>
         <pre id="code-python">import os
@@ -351,14 +363,33 @@ PAGES_DIR = os.path.join(TARGET_DIR, "pages")
 
 os.makedirs(PAGES_DIR, exist_ok=True)
 
-print("[1/2] Extracting audio narration (soundtrack.mp3)...")
+# 1. Download Master MP4 Video
+print("[1/3] Downloading MP4 video...")
+video_path = os.path.join(TARGET_DIR, "story_video.mp4")
+subprocess.run([
+    "yt-dlp", "-f", "bv*[ext=mp4]+ba*[ext=m4a]/b[ext=mp4]/best",
+    "--merge-output-format", "mp4",
+    "-o", video_path,
+    YOUTUBE_URL
+], check=True)
+
+# 2. Extract Soundtrack MP3
+print("[2/3] Extracting soundtrack.mp3...")
 subprocess.run([
     "yt-dlp", "-x", "--audio-format", "mp3",
     "-o", os.path.join(TARGET_DIR, "soundtrack.mp3"),
     YOUTUBE_URL
 ], check=True)
 
-print("[2/2] Done! Audio downloaded to:", TARGET_DIR)</pre>
+# 3. Extract High-Res Frame Slides
+print("[3/3] Extracting page frames...")
+subprocess.run([
+    "ffmpeg", "-i", video_path,
+    "-vf", "fps=1/4", "-q:v", "2",
+    os.path.join(PAGES_DIR, "page-%03d.webp")
+], check=True)
+
+print("\nPreparation complete! MP4, MP3, and frames saved to:", TARGET_DIR)</pre>
       </div>
     </div>
 
@@ -374,6 +405,7 @@ print("[2/2] Done! Audio downloaded to:", TARGET_DIR)</pre>
     const previewTitle = document.getElementById('preview-title');
     const previewId = document.getElementById('preview-id');
 
+    const codeVideo = document.getElementById('code-video');
     const codeAudio = document.getElementById('code-audio');
     const codeFrames = document.getElementById('code-frames');
     const codePython = document.getElementById('code-python');
@@ -394,7 +426,6 @@ print("[2/2] Done! Audio downloaded to:", TARGET_DIR)</pre>
         previewImg.src = `https://img.youtube.com/vi/${vid}/mqdefault.jpg`;
         previewId.innerText = `YouTube ID: ${vid}`;
 
-        // Fetch video title via noembed
         fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${vid}`)
           .then(r => r.json())
           .then(data => {
@@ -402,8 +433,10 @@ print("[2/2] Done! Audio downloaded to:", TARGET_DIR)</pre>
               previewTitle.innerText = data.title;
               if (folderInput.value === 'my-story') {
                 const sanitized = data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').substring(0, 24);
-                if (sanitized) folderInput.value = sanitized;
-                updateCommands();
+                if (sanitized) {
+                  folderInput.value = sanitized;
+                  updateCommands();
+                }
               }
             }
           })
@@ -412,14 +445,17 @@ print("[2/2] Done! Audio downloaded to:", TARGET_DIR)</pre>
         previewBox.style.display = 'none';
       }
 
-      // Audio Tab Command
+      // MP4 Download Command
+      codeVideo.innerText = `yt-dlp -f "bv*[ext=mp4]+ba*[ext=m4a]/b[ext=mp4]/best" --merge-output-format mp4 -o "books/${folder}/story_video.mp4" "${url}"`;
+
+      // Audio MP3 Command
       codeAudio.innerText = `yt-dlp -x --audio-format mp3 -o "books/${folder}/soundtrack.mp3" "${url}"`;
 
       // Frame Extraction Commands
-      codeFrames.innerText = `# 1. Download video locally\nyt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" -o "temp_video.mp4" "${url}"\n\n# 2. Extract slides into pages directory (1 frame every 4 seconds)\nif not exist "books\\${folder}\\pages" mkdir "books\\${folder}\\pages"\nffmpeg -i temp_video.mp4 -vf "fps=1/4" -q:v 2 books/${folder}/pages/page-%03d.webp`;
+      codeFrames.innerText = `# 1. Download source MP4 video\nyt-dlp -f "bv*[ext=mp4]+ba*[ext=m4a]/b[ext=mp4]" --merge-output-format mp4 -o "temp_video.mp4" "${url}"\n\n# 2. Extract slides into pages directory (1 frame every 4 seconds)\nif not exist "books\\${folder}\\pages" mkdir "books\\${folder}\\pages"\nffmpeg -i temp_video.mp4 -vf "fps=1/4" -q:v 2 books/${folder}/pages/page-%03d.webp`;
 
       // Python Script
-      codePython.innerText = `import os\nimport subprocess\n\nYOUTUBE_URL = "${url}"\nFOLDER_NAME = "${folder}"\nTARGET_DIR = os.path.join("books", FOLDER_NAME)\nPAGES_DIR = os.path.join(TARGET_DIR, "pages")\n\nos.makedirs(PAGES_DIR, exist_ok=True)\n\nprint("[1/2] Extracting audio narration (soundtrack.mp3)...")\nsubprocess.run([\n    "yt-dlp", "-x", "--audio-format", "mp3",\n    "-o", os.path.join(TARGET_DIR, "soundtrack.mp3"),\n    YOUTUBE_URL\n], check=True)\n\nprint("[2/2] Extracting high-res book frames...")\nsubprocess.run([\n    "yt-dlp", "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]",\n    "-o", "temp_story.mp4",\n    YOUTUBE_URL\n], check=True)\n\nsubprocess.run([\n    "ffmpeg", "-i", "temp_story.mp4",\n    "-vf", "fps=1/4", "-q:v", "2",\n    os.path.join(PAGES_DIR, "page-%03d.webp")\n], check=True)\n\nif os.path.exists("temp_story.mp4"):\n    os.remove("temp_story.mp4")\n\nprint("\\nStorybook preparation complete! Files ready in:", TARGET_DIR)`;
+      codePython.innerText = `import os\nimport subprocess\n\nYOUTUBE_URL = "${url}"\nFOLDER_NAME = "${folder}"\nTARGET_DIR = os.path.join("books", FOLDER_NAME)\nPAGES_DIR = os.path.join(TARGET_DIR, "pages")\n\nos.makedirs(PAGES_DIR, exist_ok=True)\n\n# 1. Download Master MP4 Video\nprint("[1/3] Downloading MP4 video...")\nvideo_path = os.path.join(TARGET_DIR, "story_video.mp4")\nsubprocess.run([\n    "yt-dlp", "-f", "bv*[ext=mp4]+ba*[ext=m4a]/b[ext=mp4]/best",\n    "--merge-output-format", "mp4",\n    "-o", video_path,\n    YOUTUBE_URL\n], check=True)\n\n# 2. Extract Soundtrack MP3\nprint("[2/3] Extracting soundtrack.mp3...")\nsubprocess.run([\n    "yt-dlp", "-x", "--audio-format", "mp3",\n    "-o", os.path.join(TARGET_DIR, "soundtrack.mp3"),\n    YOUTUBE_URL\n], check=True)\n\n# 3. Extract High-Res Frame Slides\nprint("[3/3] Extracting page frames...")\nsubprocess.run([\n    "ffmpeg", "-i", video_path,\n    "-vf", "fps=1/4", "-q:v", "2",\n    os.path.join(PAGES_DIR, "page-%03d.webp")\n], check=True)\n\nprint("\\nPreparation complete! MP4, MP3, and frames saved to:", TARGET_DIR)`;
     }
 
     urlInput.addEventListener('input', updateCommands);
