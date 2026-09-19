@@ -1,0 +1,68 @@
+name: YouTube Media Extractor
+
+on:
+  workflow_dispatch:
+    inputs:
+      youtube_url:
+        description: 'YouTube Video URL'
+        required: true
+        type: string
+      target_folder:
+        description: 'Target story folder name (inside books/)'
+        required: true
+        default: '13-18-9-2026-9-10-zoom'
+        type: string
+      media_type:
+        description: 'Format to extract'
+        required: true
+        type: choice
+        options:
+          - 'audio'
+          - 'video'
+        default: 'audio'
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install FFmpeg and yt-dlp
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+          python -m pip install --upgrade pip yt-dlp
+
+      - name: Create destination directory
+        run: |
+          mkdir -p "books/${{ inputs.target_folder }}"
+
+      - name: Extract Audio (MP3)
+        if: ${{ inputs.media_type == 'audio' }}
+        run: |
+          yt-dlp -x --audio-format mp3 --audio-quality 192K \
+            -o "books/${{ inputs.target_folder }}/soundtrack.mp3" \
+            "${{ inputs.youtube_url }}"
+
+      - name: Extract Video (MP4)
+        if: ${{ inputs.media_type == 'video' }}
+        run: |
+          yt-dlp -f "bv*[ext=mp4]+ba*[ext=m4a]/b[ext=mp4]/best" --merge-output-format mp4 \
+            -o "books/${{ inputs.target_folder }}/story_video.mp4" \
+            "${{ inputs.youtube_url }}"
+
+      - name: Commit and Push to Repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "books/${{ inputs.target_folder }}/"
+          git commit -m "chore: add extracted media for ${{ inputs.target_folder }}" || echo "No changes to commit"
+          git push
