@@ -3,178 +3,362 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Storybook Narration Generator (TTS)</title>
+  <title>Narration Studio - Web TTS Integration</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      background-color: #0f172a;
+      background-color: #0b0f19;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      min-height: 100vh;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: #f8fafc;
+      overflow: hidden;
+    }
+
+    /* Top Studio Navigation Bar */
+    header.studio-header {
+      background: #1e293b;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.6rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      z-index: 10;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .btn-back {
+      background: #334155;
+      color: #cbd5e1;
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      transition: background 0.2s;
+    }
+
+    .btn-back:hover {
+      background: #475569;
+      color: #fff;
+    }
+
+    .studio-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+
+    /* Provider Switcher Tabs */
+    .provider-nav {
+      display: flex;
+      background: #0f172a;
+      padding: 0.25rem;
+      border-radius: 0.5rem;
+      border: 1px solid #334155;
+      gap: 0.35rem;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.4rem 0.9rem;
+      border-radius: 0.35rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: #4f46e5;
+      color: #ffffff;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .btn-action {
+      background: #334155;
+      color: #f8fafc;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.4rem 0.85rem;
+      border-radius: 0.4rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .btn-action:hover {
+      background: #475569;
+    }
+
+    .btn-launch-external {
+      background: #10b981;
+      border-color: transparent;
+    }
+
+    .btn-launch-external:hover {
+      background: #059669;
+    }
+
+    /* Main Studio Split Layout */
+    .studio-layout {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Sidebar Script Assistant */
+    .script-drawer {
+      width: 380px;
+      background: #111827;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      padding: 1.25rem;
+      overflow-y: auto;
+    }
+
+    .drawer-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      margin-bottom: 0.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .drawer-desc {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      line-height: 1.4;
+      margin-bottom: 1rem;
+    }
+
+    .script-box-wrapper {
+      margin-bottom: 1rem;
+    }
+
+    .script-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      color: #cbd5e1;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    .btn-copy-script {
+      background: #334155;
+      color: #93c5fd;
+      border: none;
+      padding: 0.2rem 0.55rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-radius: 0.3rem;
+      cursor: pointer;
+    }
+
+    .btn-copy-script:hover {
+      background: #475569;
+      color: #fff;
+    }
+
+    textarea.script-preview {
+      width: 100%;
+      height: 130px;
+      background: #0b0f19;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      color: #f1f5f9;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      padding: 0.6rem;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    /* Iframe & Workspace Stage */
+    .iframe-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: #0f172a;
+    }
+
+    /* Frame Overlay Banner when Browser Blocks CSP */
+    .csp-banner {
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      padding: 0.6rem 1.25rem;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .csp-banner a {
+      color: #818cf8;
+      text-decoration: underline;
+    }
+
+    iframe#portal-frame {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #ffffff;
+    }
+
+    /* Fallback Backdrop in case Iframe is blocked */
+    .iframe-blocked-fallback {
+      position: absolute;
+      top: 45px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #0f172a;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      color: #fff;
-      padding: 1.5rem;
-    }
-    .card {
-      background: rgba(30, 41, 59, 0.75);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
       padding: 2rem;
-      border-radius: 1.25rem;
-      width: 100%;
-      max-width: 640px;
+      text-align: center;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .fallback-card {
+      pointer-events: auto;
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 520px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     }
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+
+    .fallback-card h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #f8fafc;
+    }
+
+    .fallback-card p {
+      font-size: 0.83rem;
+      color: #94a3b8;
+      line-height: 1.5;
       margin-bottom: 1.25rem;
     }
-    h1 { font-size: 1.35rem; font-weight: 700; color: #f8fafc; }
-    p.subtitle { font-size: 0.85rem; color: #94a3b8; margin-top: 0.25rem; }
-    .auth-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid #334155;
-      padding: 0.35rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #94a3b8;
-      cursor: pointer;
-    }
-    .auth-badge.authenticated {
-      background: rgba(16, 185, 129, 0.15);
-      border-color: rgba(16, 185, 129, 0.4);
-      color: #34d399;
-    }
-    .provider-toggle {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1.25rem;
-      background: #0b0f19;
-      padding: 0.3rem;
-      border-radius: 0.6rem;
-      border: 1px solid #334155;
-    }
-    .provider-btn {
-      flex: 1;
-      background: transparent;
-      color: #94a3b8;
-      border: none;
-      padding: 0.55rem;
-      font-size: 0.85rem;
-      font-weight: 600;
-      border-radius: 0.4rem;
-      cursor: pointer;
-    }
-    .provider-btn.active { background: #4f46e5; color: #fff; }
-    .form-group { margin-bottom: 1rem; }
-    label { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.35rem; }
-    select, textarea, input[type="text"], input[type="password"] {
-      width: 100%;
-      padding: 0.75rem 0.9rem;
-      background: #0b0f19;
-      border: 1px solid #334155;
-      border-radius: 0.6rem;
-      color: #f1f5f9;
-      font-size: 0.88rem;
-      outline: none;
-      font-family: inherit;
-    }
-    textarea { resize: vertical; min-height: 140px; line-height: 1.5; }
-    .btn-submit {
-      width: 100%;
+
+    .btn-companion {
       background: #4f46e5;
-      color: #ffffff;
-      border: none;
-      padding: 0.85rem;
-      font-size: 0.95rem;
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.9rem;
       font-weight: 600;
-      border-radius: 0.6rem;
-      cursor: pointer;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
       gap: 0.5rem;
-      margin-top: 0.5rem;
+      transition: background 0.2s;
     }
-    .btn-submit:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
-    .status-msg { margin-top: 1rem; padding: 0.75rem 1rem; border-radius: 0.5rem; font-size: 0.85rem; display: none; }
-    .status-msg.error { display: block; background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); color: #fda4af; }
-    .status-msg.info { display: block; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #c7d2fe; }
-    .result-section { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.08); display: none; }
-    audio { width: 100%; height: 42px; margin-bottom: 1rem; }
-    .btn-download {
-      display: block;
-      text-align: center;
-      background: #10b981;
-      color: #ffffff;
-      text-decoration: none;
-      padding: 0.75rem;
-      border-radius: 0.5rem;
-      font-weight: 600;
-      font-size: 0.9rem;
+
+    .btn-companion:hover {
+      background: #4338ca;
     }
-    .nav-link { display: inline-block; margin-top: 1.5rem; font-size: 0.85rem; color: #818cf8; text-decoration: none; }
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px);
-      display: none; align-items: center; justify-content: center; padding: 1.5rem; z-index: 1000;
-    }
-    .modal-backdrop.open { display: flex; }
-    .modal {
-      background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 1rem;
-      padding: 2rem; width: 100%; max-width: 480px;
-    }
-    .modal h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.35rem; color: #f8fafc; }
-    .modal p { font-size: 0.8rem; color: #94a3b8; line-height: 1.4; margin-bottom: 1.5rem; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
-    .btn-cancel { background: #334155; color: #cbd5e1; border: none; padding: 0.65rem 1.2rem; border-radius: 0.5rem; cursor: pointer; }
-    .btn-confirm { background: #4f46e5; color: #fff; border: none; padding: 0.65rem 1.25rem; border-radius: 0.5rem; cursor: pointer; }
   </style>
 </head>
 <body>
 
-  <div class="card">
-    <div class="card-header">
-      <div>
-        <h1>Narration Studio</h1>
-        <p class="subtitle">Generate high-fidelity audio narration for your storybooks.</p>
-      </div>
-      <button type="button" id="auth-status-btn" class="auth-badge">
-        <span id="auth-dot">⚪</span> <span id="auth-label">Connect API</span>
+  <!-- Top Studio Header -->
+  <header class="studio-header">
+    <div class="brand-section">
+      <a href="index.html" class="btn-back">← Bookshelf</a>
+      <span class="studio-title">🎙️ Narration Recording Studio</span>
+    </div>
+
+    <!-- Provider Switcher -->
+    <div class="provider-nav">
+      <button type="button" class="tab-btn active" id="tab-eleven" data-url="https://elevenlabs.io/app/home" data-title="ElevenLabs English Recording">
+        🇬🇧 English (ElevenLabs)
+      </button>
+      <button type="button" class="tab-btn" id="tab-minimax" data-url="https://www.minimax.io/audio" data-title="MiniMax Cantonese Recording">
+        🇭🇰 Chinese / Cantonese (MiniMax)
       </button>
     </div>
 
-    <div class="provider-toggle">
-      <button type="button" class="provider-btn active" id="btn-tab-eleven">ElevenLabs (Free API Tier)</button>
-      <button type="button" class="provider-btn" id="btn-tab-browser">Browser Native (Cantonese / No Key)</button>
+    <div class="header-actions">
+      <button type="button" class="btn-action btn-launch-external" id="btn-open-companion">
+        ↗ Open Live Studio
+      </button>
     </div>
+  </header>
 
-    <!-- Voice Selection -->
-    <div class="form-group">
-      <label for="voice-select">
-        <span>Narrator Voice</span>
-        <span id="voice-desc" style="color: #34d399; font-size: 0.75rem;">Free Tier Supported</span>
-      </label>
-      <select id="voice-select">
-        <option value="21m00Tcm4TlvDq8ikWAM" selected>Rachel - Calm, Natural & Storybook</option>
-        <option value="Xb7hH8MSUJpSbSDYk0k2">Alice - Clear & Friendly Educator</option>
-        <option value="EXAVITQu4vr4xnSDxMaL">Bella - Soft & Gentle</option>
-        <option value="ErXwobaYiN019PkySvjV">Antoni - Lively & Engaging</option>
-        <option value="pNInz6obpgDQGcFmaJgB">Adam - Warm & Deep</option>
-      </select>
-    </div>
+  <div class="studio-layout">
 
-    <!-- Text Area -->
-    <div class="form-group">
-      <label for="story-text">Story Script (Supports SSML Break Timing)</label>
-      <textarea id="story-text">Good morning, students! Welcome to Luminous Minds School.
+    <!-- Script Assistant Sidebar -->
+    <aside class="script-drawer">
+      <div class="drawer-title">
+        <span>📖 Story Scripts & Breaks</span>
+      </div>
+      <p class="drawer-desc">
+        Copy your story text pre-formatted with pauses, then paste directly into the studio input box.
+      </p>
+
+      <!-- English Script (November Calendar Story) -->
+      <div class="script-box-wrapper">
+        <div class="script-header">
+          <span>🇬🇧 November Activity (English)</span>
+          <button type="button" class="btn-copy-script" onclick="copyScript('script-en')">Copy Text</button>
+        </div>
+        <textarea id="script-en" class="script-preview" readonly>It is now November. Emily is very excited because she has many fun activities this month. Please help Emily write some marks on her calendar.
+
+Are you ready? Let's start!
+
+The first day of November is a special day for Emily. It is her lucky day because she won a drawing competition at school. Draw a star on 1st November.
+
+The next day is even more exciting. 2nd November is Emily's birthday. She will celebrate with her family and friends. There will be delicious food and a big chocolate cake. Draw a birthday cake on 2nd November.</textarea>
+      </div>
+
+      <!-- English SSML Breaks Script -->
+      <div class="script-box-wrapper">
+        <div class="script-header">
+          <span>🇬🇧 School Bags (With 8s Breaks)</span>
+          <button type="button" class="btn-copy-script" onclick="copyScript('script-en-breaks')">Copy Text</button>
+        </div>
+        <textarea id="script-en-breaks" class="script-preview" readonly>Good morning, students! Welcome to Luminous Minds School.
 
 <break time="3s" /> <break time="3s" /> <break time="2s" />
 
@@ -183,210 +367,116 @@ There are four school bags on the Lost and Found table. The names have fallen of
 <break time="3s" /> <break time="3s" /> <break time="2s" />
 
 First, let's look at Annie's bag. Annie told the teacher that her bag is not green or blue. Inside her bag, there is one water bottle and three rulers. She uses the rulers in her Maths lessons every day.</textarea>
-    </div>
-
-    <button class="btn-submit" id="btn-generate">🎙️ Synthesize Narration</button>
-
-    <div id="status-box" class="status-msg"></div>
-
-    <div id="result-box" class="result-section">
-      <audio id="audio-player" controls></audio>
-      <a id="download-audio-btn" class="btn-download" download="soundtrack.mp3">⬇ Download soundtrack.mp3</a>
-    </div>
-
-    <a href="index.html" class="nav-link">← Return to Bookshelf</a>
-  </div>
-
-  <!-- In-Memory Auth Modal -->
-  <div id="login-modal" class="modal-backdrop">
-    <div class="modal">
-      <h2>ElevenLabs API Key</h2>
-      <p>Enter your secret key starting with <strong>sk_</strong>. Held strictly in volatile memory for this browser session.</p>
-      <div class="form-group">
-        <input type="password" id="modal-key-input" placeholder="sk_..." autocomplete="off" />
       </div>
-      <div class="modal-actions">
-        <button type="button" class="btn-cancel" id="btn-modal-cancel">Cancel</button>
-        <button type="button" class="btn-confirm" id="btn-modal-save">Use for Session</button>
+
+      <!-- Cantonese Script -->
+      <div class="script-box-wrapper">
+        <div class="script-header">
+          <span>🇭🇰 學校失物招領 (廣東話)</span>
+          <button type="button" class="btn-copy-script" onclick="copyScript('script-yue')">Copy Text</button>
+        </div>
+        <textarea id="script-yue" class="script-preview" readonly>早晨，各位同學！歡迎嚟到光明小學。
+
+喺失物招領嘅枱上面，有四個書包。書包上面嘅名牌甩咗出嚟，所以我們要幫同學仔搵返佢哋嘅書包。請大家仔細聽清楚喇！
+
+首先，我哋睇下阿妮嘅書包。阿妮同老師講，佢嘅書包唔係綠色，亦都唔係藍色。書包入面有一支水樽同三把尺。
+
+跟住係小潔嘅書包。小潔好鍾意睇書。佢嘅書包入面有一個筆袋同一本故事書。佢嘅書包好似太陽咁燦爛，係黃色嘅。</textarea>
       </div>
-    </div>
+
+      <!-- Instructions -->
+      <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.75rem; color: #94a3b8; line-height: 1.4;">
+        💡 <strong>Workflow Tip:</strong> After generating the narration, click <strong>Download (下載)</strong> in the studio, rename the file to <code>soundtrack.mp3</code>, and place it inside your story directory (e.g. <code>books/highway-rat/soundtrack.mp3</code>).
+      </div>
+    </aside>
+
+    <!-- Main Portal Frame Area -->
+    <main class="iframe-stage">
+      <!-- Status & Direct Launcher Bar -->
+      <div class="csp-banner">
+        <span id="active-url-display">Active Studio: https://elevenlabs.io/app/home</span>
+        <span>Same browser session active (Credits: 450 on ElevenLabs / 9,144 on MiniMax)</span>
+      </div>
+
+      <!-- Inframe Portal -->
+      <iframe
+        id="portal-frame"
+        src="https://elevenlabs.io/app/home"
+        allow="clipboard-read; clipboard-write; microphone"
+        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+      ></iframe>
+
+      <!-- Fallback Card (Visible if browser blocks X-Frame-Options) -->
+      <div class="iframe-blocked-fallback" id="fallback-layer">
+        <div class="fallback-card">
+          <h2 id="fallback-title">Studio Integration Active</h2>
+          <p id="fallback-desc">
+            ElevenLabs and MiniMax enforce browser anti-clickjacking security (<code>X-Frame-Options</code>). Click below to launch the studio in a connected companion window—your existing browser login, voices, and remaining credits will remain synchronized[cite: 11, 12].
+          </p>
+          <button type="button" class="btn-companion" id="btn-companion-action">
+            ⚡ Launch Studio in Connected Window
+          </button>
+        </div>
+      </div>
+    </main>
+
   </div>
 
   <script>
-    let sessionKey = null;
-    let activeProvider = 'elevenlabs';
+    const portalFrame = document.getElementById('portal-frame');
+    const tabEleven = document.getElementById('tab-eleven');
+    const tabMiniMax = document.getElementById('tab-minimax');
+    const urlDisplay = document.getElementById('active-url-display');
+    const openBtn = document.getElementById('btn-open-companion');
+    const companionActionBtn = document.getElementById('btn-companion-action');
+    const fallbackTitle = document.getElementById('fallback-title');
 
-    const modal = document.getElementById('login-modal');
-    const authBtn = document.getElementById('auth-status-btn');
-    const authDot = document.getElementById('auth-dot');
-    const authLabel = document.getElementById('auth-label');
-    const modalKeyInput = document.getElementById('modal-key-input');
-    const modalCancel = document.getElementById('btn-modal-cancel');
-    const modalSave = document.getElementById('btn-modal-save');
+    let currentUrl = "https://elevenlabs.io/app/home"; //
+    let currentProvider = "ElevenLabs";
 
-    const tabEleven = document.getElementById('btn-tab-eleven');
-    const tabBrowser = document.getElementById('btn-tab-browser');
-    const voiceSelect = document.getElementById('voice-select');
-    const voiceDesc = document.getElementById('voice-desc');
-    const storyText = document.getElementById('story-text');
-    const generateBtn = document.getElementById('btn-generate');
-    const statusBox = document.getElementById('status-box');
-    const resultBox = document.getElementById('result-box');
-    const audioPlayer = document.getElementById('audio-player');
-    const downloadBtn = document.getElementById('download-audio-btn');
+    function setStudio(url, providerName) {
+      currentUrl = url;
+      currentProvider = providerName;
+      portalFrame.src = url;
+      urlDisplay.innerText = `Active Studio: ${url}`;
+      fallbackTitle.innerText = `${providerName} Studio Active`;
 
-    const ELEVEN_VOICES = [
-      { id: "21m00Tcm4TlvDq8ikWAM", name: "Rachel - Calm, Natural & Storybook" },
-      { id: "Xb7hH8MSUJpSbSDYk0k2", name: "Alice - Clear & Friendly Educator" },
-      { id: "EXAVITQu4vr4xnSDxMaL", name: "Bella - Soft & Gentle" },
-      { id: "ErXwobaYiN019PkySvjV", name: "Antoni - Lively & Engaging" },
-      { id: "pNInz6obpgDQGcFmaJgB", name: "Adam - Warm & Deep" }
-    ];
-
-    let browserVoices = [];
-    function loadBrowserVoices() {
-      browserVoices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
-    }
-    if ('speechSynthesis' in window) {
-      loadBrowserVoices();
-      window.speechSynthesis.onvoiceschanged = loadBrowserVoices;
-    }
-
-    function updateAuthBadge() {
-      if (sessionKey) {
-        authBtn.classList.add('authenticated');
-        authDot.innerText = '🟢';
-        authLabel.innerText = 'Session Active';
-      } else {
-        authBtn.classList.remove('authenticated');
-        authDot.innerText = '⚪';
-        authLabel.innerText = 'Connect API';
-      }
-    }
-
-    authBtn.addEventListener('click', () => {
-      modalKeyInput.value = sessionKey || '';
-      modal.classList.add('open');
-      modalKeyInput.focus();
-    });
-
-    modalCancel.addEventListener('click', () => modal.classList.remove('open'));
-
-    modalSave.addEventListener('click', () => {
-      const key = modalKeyInput.value.trim();
-      if (!key.startsWith('sk_')) {
-        alert('Please enter a valid ElevenLabs secret key starting with sk_');
-        return;
-      }
-      sessionKey = key;
-      updateAuthBadge();
-      modal.classList.remove('open');
-    });
-
-    function setProvider(provider) {
-      activeProvider = provider;
-      statusBox.style.display = 'none';
-      resultBox.style.display = 'none';
-
-      if (provider === 'elevenlabs') {
+      if (url.includes('elevenlabs')) {
         tabEleven.classList.add('active');
-        tabBrowser.classList.remove('active');
-        authBtn.style.display = 'inline-flex';
-        voiceDesc.innerText = 'Free Tier Supported';
-        voiceSelect.innerHTML = ELEVEN_VOICES.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
+        tabMiniMax.classList.remove('active');
       } else {
-        tabBrowser.classList.add('active');
+        tabMiniMax.classList.add('active');
         tabEleven.classList.remove('active');
-        authBtn.style.display = 'none';
-        voiceDesc.innerText = 'Local Device Voice';
-
-        const cantoneseVoices = browserVoices.filter(v => v.lang.includes('HK') || v.lang.includes('yue') || v.lang.includes('zh'));
-        const voicesToUse = cantoneseVoices.length > 0 ? cantoneseVoices : browserVoices;
-
-        voiceSelect.innerHTML = voicesToUse.map((v, i) => `<option value="${i}">${v.name} (${v.lang})</option>`).join('');
-        if (voicesToUse.length === 0) {
-          voiceSelect.innerHTML = '<option value="">Default System Voice</option>';
-        }
       }
     }
 
-    tabEleven.addEventListener('click', () => setProvider('elevenlabs'));
-    tabBrowser.addEventListener('click', () => setProvider('browser'));
-
-    function showStatus(msg, isError = false) {
-      statusBox.className = `status-msg ${isError ? 'error' : 'info'}`;
-      statusBox.innerText = msg;
-      statusBox.style.display = 'block';
-    }
-
-    generateBtn.addEventListener('click', async () => {
-      const text = storyText.value.trim();
-      if (!text) {
-        showStatus('Please enter narration text.', true);
-        return;
-      }
-
-      if (activeProvider === 'browser') {
-        if (!('speechSynthesis' in window)) {
-          showStatus('Your browser does not support speech synthesis.', true);
-          return;
-        }
-        window.speechSynthesis.cancel();
-        // Strip SSML tags for plain browser voice
-        const cleanText = text.replace(/<[^>]+>/g, ' ... ');
-        const utter = new SpeechSynthesisUtterance(cleanText);
-        utter.rate = 0.85;
-        if (voiceSelect.value && browserVoices[parseInt(voiceSelect.value)]) {
-          utter.voice = browserVoices[parseInt(voiceSelect.value)];
-        }
-        window.speechSynthesis.speak(utter);
-        showStatus('Playing audio via native device synthesizer.');
-        return;
-      }
-
-      // ElevenLabs Free API Path
-      if (!sessionKey) {
-        modal.classList.add('open');
-        return;
-      }
-
-      generateBtn.disabled = true;
-      resultBox.style.display = 'none';
-      showStatus('Synthesizing audio via ElevenLabs...');
-
-      try {
-        const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceSelect.value}`, {
-          method: 'POST',
-          headers: {
-            'xi-api-key': sessionKey,
-            'Content-Type': 'application/json',
-            'Accept': 'audio/mpeg'
-          },
-          body: JSON.stringify({
-            text: text,
-            model_id: "eleven_multilingual_v2",
-            voice_settings: { stability: 0.5, similarity_boost: 0.75 }
-          })
-        });
-
-        if (!resp.ok) {
-          const err = await resp.json().catch(() => ({}));
-          throw new Error(err?.detail?.message || `HTTP ${resp.status}`);
-        }
-
-        const blob = await resp.blob();
-        const audioUrl = URL.createObjectURL(blob);
-        audioPlayer.src = audioUrl;
-        downloadBtn.href = audioUrl;
-        resultBox.style.display = 'block';
-        audioPlayer.play().catch(() => {});
-        showStatus('Audio synthesized successfully!');
-      } catch (err) {
-        showStatus(`Error: ${err.message}`, true);
-      } finally {
-        generateBtn.disabled = false;
-      }
+    tabEleven.addEventListener('click', () => {
+      setStudio("https://elevenlabs.io/app/home", "ElevenLabs"); //[cite: 11]
     });
+
+    tabMiniMax.addEventListener('click', () => {
+      setStudio("https://www.minimax.io/audio", "MiniMax"); //
+    });
+
+    function launchStudioWindow() {
+      // Opens side-by-side app window sharing 100% of browser cookies, RAM, and logins
+      const w = 1200;
+      const h = 850;
+      const left = window.screen.width - w;
+      const top = 60;
+      window.open(currentUrl, 'StudioWindow', `width=${w},height=${h},left=${left},top=${top},menubar=no,status=no,toolbar=no`);
+    }
+
+    openBtn.addEventListener('click', launchStudioWindow);
+    companionActionBtn.addEventListener('click', launchStudioWindow);
+
+    function copyScript(textareaId) {
+      const textarea = document.getElementById(textareaId);
+      textarea.select();
+      navigator.clipboard.writeText(textarea.value).then(() => {
+        alert('Script copied to clipboard! Paste it directly into the text input box.');
+      });
+    }
   </script>
 </body>
 </html>
