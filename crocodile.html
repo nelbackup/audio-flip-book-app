@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Crocodile Who Didn't Like Water - Audio Flipbook</title>
 
+  <!-- StPageFlip Engine -->
   <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
 
   <style>
@@ -26,7 +27,7 @@
       color: #fff;
     }
 
-    /* Top Bar */
+    /* Top Navigation */
     .top-bar {
       position: fixed;
       top: 0;
@@ -37,7 +38,7 @@
       align-items: center;
       justify-content: space-between;
       padding: 0 1.5rem;
-      background: rgba(15, 23, 42, 0.8);
+      background: rgba(15, 23, 42, 0.85);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       z-index: 100;
@@ -53,8 +54,8 @@
       background: #334155;
       color: #f8fafc;
       text-decoration: none;
-      padding: 0.4rem 0.9rem;
-      font-size: 0.8rem;
+      padding: 0.45rem 1rem;
+      font-size: 0.85rem;
       font-weight: 600;
       border-radius: 9999px;
       transition: background 0.2s;
@@ -64,32 +65,34 @@
       background: #475569;
     }
 
-    /* Guaranteed Flipbook Stage */
+    /* Guaranteed Viewport Stage */
     .stage-wrapper {
       position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
       width: 100%;
-      height: 76vh;
-      margin-top: 30px;
+      height: calc(100vh - 130px);
+      margin-top: 40px;
     }
 
     #flipbook {
-      width: 960px;
-      height: 640px;
-      max-width: 95vw;
-      max-height: 75vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      max-width: 96vw;
+      max-height: 78vh;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
     }
 
-    /* Controls Bar */
+    /* Floating Controls Bar */
     .controls {
       position: fixed;
       bottom: 20px;
       display: flex;
       align-items: center;
       gap: 1.2rem;
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.92);
       padding: 0.75rem 1.8rem;
       border-radius: 9999px;
       backdrop-filter: blur(12px);
@@ -124,7 +127,7 @@
     .status {
       font-size: 0.85rem;
       color: #cbd5e1;
-      min-width: 175px;
+      min-width: 180px;
       text-align: center;
       user-select: none;
     }
@@ -142,7 +145,7 @@
   <header class="top-bar">
     <a href="index.html" class="btn-back">← Bookshelf</a>
     <h1>The Crocodile Who Didn't Like Water</h1>
-    <a href="download.html" style="color:#94a3b8; font-size:0.8rem; text-decoration:none;">MP3 Tool</a>
+    <div style="width: 80px;"></div>
   </header>
 
   <div class="stage-wrapper">
@@ -193,6 +196,7 @@
     const pageTitle = document.getElementById('page-title');
     const audioTime = document.getElementById('audio-time');
 
+    let pageFlip = null;
     let isAudioTurning = false;
     let isUserSeeking = false;
 
@@ -224,35 +228,60 @@
       return `${m}:${s < 10 ? '0' : ''}${s}`;
     }
 
-    // Initialize PageFlip with explicit boundaries
-    const pageFlip = new St.PageFlip(bookContainer, {
-      width: 480,
-      height: 640,
-      size: "stretch",
-      minWidth: 320,
-      maxWidth: 600,
-      minHeight: 440,
-      maxHeight: 840,
-      showCover: true,
-      drawShadow: true,
-      flippingTime: 700,
-      usePortrait: false,
-      maxShadowOpacity: 0.35
-    });
+    // Auto-detect aspect ratio from page-1 asset to prevent distortion
+    const probe = new Image();
+    probe.src = `${PAGES_DIR}/page-1.webp?v=2`;
 
-    const pageImages = [];
-    for (let i = 0; i < TOTAL_PAGES; i++) {
-      pageImages.push(`${PAGES_DIR}/page-${i}.webp?v=2`);
-    }
-    pageFlip.loadFromImages(pageImages);
+    probe.onload = () => {
+      initFlipBook(probe.naturalWidth || 480, probe.naturalHeight || 640);
+    };
 
-    pageFlip.on('changeState', (e) => {
-      if (e.data === 'read') {
-        isAudioTurning = false;
-        const spread = getSpreadIndex(pageFlip.getCurrentPageIndex());
-        pageTitle.innerText = getCueForSpread(spread).title;
+    probe.onerror = () => {
+      initFlipBook(480, 640);
+    };
+
+    function initFlipBook(pageW, pageH) {
+      pageFlip = new St.PageFlip(bookContainer, {
+        width: pageW,
+        height: pageH,
+        size: "stretch",
+        minWidth: 280,
+        maxWidth: 850,
+        minHeight: 380,
+        maxHeight: 1100,
+        showCover: true,
+        drawShadow: true,
+        flippingTime: 700,
+        usePortrait: false,
+        maxShadowOpacity: 0.35
+      });
+
+      const pageImages = [];
+      for (let i = 0; i < TOTAL_PAGES; i++) {
+        pageImages.push(`${PAGES_DIR}/page-${i}.webp?v=2`);
       }
-    });
+      pageFlip.loadFromImages(pageImages);
+
+      pageFlip.on('changeState', (e) => {
+        if (e.data === 'read') {
+          isAudioTurning = false;
+          const spread = getSpreadIndex(pageFlip.getCurrentPageIndex());
+          pageTitle.innerText = getCueForSpread(spread).title;
+        }
+      });
+
+      pageFlip.on('flip', (e) => {
+        const spread = getSpreadIndex(e.data);
+        pageTitle.innerText = getCueForSpread(spread).title;
+
+        if (!isAudioTurning) {
+          const cue = getCueForSpread(spread);
+          isUserSeeking = true;
+          audio.currentTime = cue.startTime;
+          setTimeout(() => { isUserSeeking = false; }, 300);
+        }
+      });
+    }
 
     // Narration -> Flip Synchronization
     audio.addEventListener('timeupdate', () => {
@@ -260,7 +289,7 @@
       const currentCue = getCueForTime(audio.currentTime);
       pageTitle.innerText = currentCue.title;
 
-      if (audio.paused || isUserSeeking) return;
+      if (audio.paused || isUserSeeking || !pageFlip) return;
 
       const currentVisibleSpread = getSpreadIndex(pageFlip.getCurrentPageIndex());
       if (currentVisibleSpread !== currentCue.pageIndex && !isAudioTurning) {
@@ -269,32 +298,22 @@
       }
     });
 
-    // Manual Flip -> Audio Seek
-    pageFlip.on('flip', (e) => {
-      const spread = getSpreadIndex(e.data);
-      pageTitle.innerText = getCueForSpread(spread).title;
-
-      if (!isAudioTurning) {
-        const cue = getCueForSpread(spread);
-        isUserSeeking = true;
-        audio.currentTime = cue.startTime;
-        setTimeout(() => { isUserSeeking = false; }, 300);
-      }
-    });
-
-    prevBtn.addEventListener('click', () => pageFlip.flipPrev());
-    nextBtn.addEventListener('click', () => pageFlip.flipNext());
+    prevBtn.addEventListener('click', () => pageFlip && pageFlip.flipPrev());
+    nextBtn.addEventListener('click', () => pageFlip && pageFlip.flipNext());
 
     playBtn.addEventListener('click', () => {
       if (audio.paused) {
-        const currentSpread = getSpreadIndex(pageFlip.getCurrentPageIndex());
+        const currentSpread = pageFlip ? getSpreadIndex(pageFlip.getCurrentPageIndex()) : 0;
         const cue = getCueForSpread(currentSpread);
 
         if (audio.currentTime < cue.startTime || audio.currentTime >= cue.endTime) {
           audio.currentTime = cue.startTime;
         }
-        audio.play();
-        playBtn.innerText = '❚❚ Pause';
+        audio.play().then(() => {
+          playBtn.innerText = '❚❚ Pause';
+        }).catch(err => {
+          console.warn("Audio playback issue:", err);
+        });
       } else {
         audio.pause();
         playBtn.innerText = '▶ Play Story';

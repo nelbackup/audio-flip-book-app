@@ -27,7 +27,7 @@
       color: #fff;
     }
 
-    /* Top Bar */
+    /* Top Navigation: MP3 Tool Removed */
     .top-bar {
       position: fixed;
       top: 0;
@@ -38,7 +38,7 @@
       align-items: center;
       justify-content: space-between;
       padding: 0 1.5rem;
-      background: rgba(15, 23, 42, 0.8);
+      background: rgba(15, 23, 42, 0.85);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       z-index: 100;
@@ -54,8 +54,8 @@
       background: #334155;
       color: #f8fafc;
       text-decoration: none;
-      padding: 0.4rem 0.9rem;
-      font-size: 0.8rem;
+      padding: 0.45rem 1rem;
+      font-size: 0.85rem;
       font-weight: 600;
       border-radius: 9999px;
       transition: background 0.2s;
@@ -65,22 +65,24 @@
       background: #475569;
     }
 
-    /* Guaranteed Flipbook Stage */
+    /* Responsive Viewport Stage */
     .stage-wrapper {
       position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
       width: 100%;
-      height: 76vh;
-      margin-top: 30px;
+      height: calc(100vh - 130px);
+      margin-top: 40px;
     }
 
     #flipbook {
-      width: 960px;
-      height: 640px;
-      max-width: 95vw;
-      max-height: 75vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      max-width: 96vw;
+      max-height: 78vh;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
     }
 
     /* Floating Controls Bar */
@@ -90,7 +92,7 @@
       display: flex;
       align-items: center;
       gap: 1.2rem;
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.92);
       padding: 0.75rem 1.8rem;
       border-radius: 9999px;
       backdrop-filter: blur(12px);
@@ -143,7 +145,7 @@
   <header class="top-bar">
     <a href="index.html" class="btn-back">← Bookshelf</a>
     <h1>The Highway Rat</h1>
-    <a href="download.html" style="color:#94a3b8; font-size:0.8rem; text-decoration:none;">MP3 Tool</a>
+    <div style="width: 80px;"></div> <!-- Spacer for visual balance -->
   </header>
 
   <div class="stage-wrapper">
@@ -166,7 +168,6 @@
     const TOTAL_PAGES = 32;
     const PAGES_DIR = 'books/highway-rat/pages';
 
-    // Cue points mapped to spreads and spoken verses
     const cuePoints = [
       { pageIndex: 0,  startTime: 0.0,   endTime: 16.0,  title: "Front Cover" },
       { pageIndex: 1,  startTime: 16.0,  endTime: 24.0,  title: "Endpaper" },
@@ -194,6 +195,7 @@
     const pageTitle = document.getElementById('page-title');
     const audioTime = document.getElementById('audio-time');
 
+    let pageFlip = null;
     let isAudioTurning = false;
     let isUserSeeking = false;
 
@@ -225,64 +227,67 @@
       return `${m}:${s < 10 ? '0' : ''}${s}`;
     }
 
-    // Initialize PageFlip
-    const pageFlip = new St.PageFlip(bookContainer, {
-      width: 480,
-      height: 640,
-      size: "stretch",
-      minWidth: 320,
-      maxWidth: 600,
-      minHeight: 440,
-      maxHeight: 840,
-      showCover: true,
-      drawShadow: true,
-      flippingTime: 700,
-      usePortrait: false,
-      maxShadowOpacity: 0.35
-    });
+    // Inspect natural image dimensions before mounting engine to prevent distortion
+    const probe = new Image();
+    probe.src = `${PAGES_DIR}/page-1.webp?v=4`;
 
-    const pageImages = [];
-    for (let i = 0; i < TOTAL_PAGES; i++) {
-      pageImages.push(`${PAGES_DIR}/page-${i}.webp?v=1`);
-    }
+    probe.onload = () => {
+      initFlipBook(probe.naturalWidth || 560, probe.naturalHeight || 500);
+    };
 
-    // Attempt to load pages with fallback to root pages/ if subfolder not populated yet
-    fetch(pageImages[0], { method: 'HEAD' })
-      .then(res => {
-        if (!res.ok) {
-          console.warn("Highway Rat folder not yet populated. Loading placeholder assets.");
-          const fallbackImages = [];
-          for (let i = 0; i < 31; i++) {
-            fallbackImages.push(`pages/page-${i}.webp?v=2`);
-          }
-          pageFlip.loadFromImages(fallbackImages);
-        } else {
-          pageFlip.loadFromImages(pageImages);
-        }
-      })
-      .catch(() => {
-        const fallbackImages = [];
-        for (let i = 0; i < 31; i++) {
-          fallbackImages.push(`pages/page-${i}.webp?v=2`);
-        }
-        pageFlip.loadFromImages(fallbackImages);
+    probe.onerror = () => {
+      initFlipBook(560, 500); // Standard square/landscape picture book proportions
+    };
+
+    function initFlipBook(pageW, pageH) {
+      pageFlip = new St.PageFlip(bookContainer, {
+        width: pageW,
+        height: pageH,
+        size: "stretch",
+        minWidth: 280,
+        maxWidth: 850,
+        minHeight: 280,
+        maxHeight: 850,
+        showCover: true,
+        drawShadow: true,
+        flippingTime: 700,
+        usePortrait: false,
+        maxShadowOpacity: 0.35
       });
 
-    pageFlip.on('changeState', (e) => {
-      if (e.data === 'read') {
-        isAudioTurning = false;
-        const spread = getSpreadIndex(pageFlip.getCurrentPageIndex());
-        pageTitle.innerText = getCueForSpread(spread).title;
+      const pageImages = [];
+      for (let i = 0; i < TOTAL_PAGES; i++) {
+        pageImages.push(`${PAGES_DIR}/page-${i}.webp?v=4`);
       }
-    });
+      pageFlip.loadFromImages(pageImages);
 
-    // Audio -> Flip Synchronization
+      pageFlip.on('changeState', (e) => {
+        if (e.data === 'read') {
+          isAudioTurning = false;
+          const spread = getSpreadIndex(pageFlip.getCurrentPageIndex());
+          pageTitle.innerText = getCueForSpread(spread).title;
+        }
+      });
+
+      pageFlip.on('flip', (e) => {
+        const spread = getSpreadIndex(e.data);
+        pageTitle.innerText = getCueForSpread(spread).title;
+
+        if (!isAudioTurning) {
+          const cue = getCueForSpread(spread);
+          isUserSeeking = true;
+          audio.currentTime = cue.startTime;
+          setTimeout(() => { isUserSeeking = false; }, 300);
+        }
+      });
+    }
+
     audio.addEventListener('timeupdate', () => {
       audioTime.innerText = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration || 0)}`;
       const currentCue = getCueForTime(audio.currentTime);
       pageTitle.innerText = currentCue.title;
 
-      if (audio.paused || isUserSeeking) return;
+      if (audio.paused || isUserSeeking || !pageFlip) return;
 
       const currentVisibleSpread = getSpreadIndex(pageFlip.getCurrentPageIndex());
       if (currentVisibleSpread !== currentCue.pageIndex && !isAudioTurning) {
@@ -291,25 +296,12 @@
       }
     });
 
-    // Manual Flip -> Audio Seek
-    pageFlip.on('flip', (e) => {
-      const spread = getSpreadIndex(e.data);
-      pageTitle.innerText = getCueForSpread(spread).title;
-
-      if (!isAudioTurning) {
-        const cue = getCueForSpread(spread);
-        isUserSeeking = true;
-        audio.currentTime = cue.startTime;
-        setTimeout(() => { isUserSeeking = false; }, 300);
-      }
-    });
-
-    prevBtn.addEventListener('click', () => pageFlip.flipPrev());
-    nextBtn.addEventListener('click', () => pageFlip.flipNext());
+    prevBtn.addEventListener('click', () => pageFlip && pageFlip.flipPrev());
+    nextBtn.addEventListener('click', () => pageFlip && pageFlip.flipNext());
 
     playBtn.addEventListener('click', () => {
       if (audio.paused) {
-        const currentSpread = getSpreadIndex(pageFlip.getCurrentPageIndex());
+        const currentSpread = pageFlip ? getSpreadIndex(pageFlip.getCurrentPageIndex()) : 0;
         const cue = getCueForSpread(currentSpread);
 
         if (audio.currentTime < cue.startTime || audio.currentTime >= cue.endTime) {
@@ -318,8 +310,8 @@
         audio.play().then(() => {
           playBtn.innerText = '❚❚ Pause';
         }).catch(err => {
-          console.warn("Audio play blocked or file not found:", err);
-          alert("Audio soundtrack not found. Place 'soundtrack.mp3' in 'books/highway-rat/'.");
+          console.warn("Audio file missing:", err);
+          alert("Audio file not found in books/highway-rat/soundtrack.mp3.");
         });
       } else {
         audio.pause();
