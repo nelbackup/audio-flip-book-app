@@ -133,6 +133,17 @@
     }
     .btn-download:hover { background: #059669; }
 
+    .download-path-hint {
+      display: none;
+      font-size: 0.76rem;
+      color: #94a3b8;
+      text-align: center;
+      margin-top: 0.5rem;
+    }
+    .download-path-hint code {
+      color: #38bdf8;
+    }
+
     .tier-alert {
       margin-top: 1rem;
       padding: 0.85rem 1rem;
@@ -151,7 +162,7 @@
     .nav-link { display: inline-block; margin-top: 1.5rem; font-size: 0.85rem; color: #818cf8; text-decoration: none; }
     .nav-link:hover { text-decoration: underline; }
 
-    /* Modal Popup Prompt for Local Download */
+    /* Modal Popup Prompt for Default Downloads Directory */
     .modal-backdrop {
       position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
       display: none; align-items: center; justify-content: center; padding: 1.5rem; z-index: 1000;
@@ -159,19 +170,20 @@
     .modal-backdrop.open { display: flex; }
     .modal {
       background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 1rem;
-      padding: 2rem; width: 100%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
+      padding: 2rem; width: 100%; max-width: 520px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
       text-align: center;
     }
     .modal h2 { font-size: 1.25rem; color: #34d399; margin-bottom: 0.5rem; }
-    .modal p { font-size: 0.85rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 1.25rem; }
+    .modal p { font-size: 0.85rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 0.75rem; }
     .modal code {
-      background: #0f172a; color: #38bdf8; padding: 0.3rem 0.6rem; border-radius: 0.4rem;
-      font-size: 0.82rem; display: block; margin: 0.75rem 0; word-break: break-all;
+      background: #0f172a; color: #38bdf8; padding: 0.5rem 0.8rem; border-radius: 0.5rem;
+      font-size: 0.84rem; display: block; margin: 1rem 0; word-break: break-all; border: 1px solid #334155;
     }
     .btn-modal-close {
-      background: #4f46e5; color: #fff; border: none; padding: 0.65rem 1.5rem;
-      border-radius: 0.5rem; font-weight: 600; cursor: pointer;
+      background: #4f46e5; color: #fff; border: none; padding: 0.65rem 1.75rem;
+      border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: background 0.2s;
     }
+    .btn-modal-close:hover { background: #4338ca; }
   </style>
 </head>
 <body>
@@ -222,6 +234,9 @@
       <a id="btn-download" class="btn-download" download="soundtrack.mp3" href="#">
         ⬇ Download soundtrack.mp3
       </a>
+      <p id="download-hint" class="download-path-hint">
+        File downloaded to your default directory: <code>C:\Users\Anthea Cheung\Downloads\soundtrack.mp3</code>
+      </p>
     </div>
 
     <a href="index.html" class="nav-link">← Return to Bookshelf</a>
@@ -232,14 +247,14 @@
     <div class="modal">
       <h2>🎉 Audio Prepared Successfully!</h2>
       <p>Your browser has initiated the download for <strong>soundtrack.mp3</strong>.</p>
-      <p>Save or place the file directly into your local book directory:</p>
-      <code>D:\MissJ\audio-flip-book-app\books\highway-rat\soundtrack.mp3</code>
+      <p>The file is saved to your default user download directory:</p>
+      <code>C:\Users\Anthea Cheung\Downloads\soundtrack.mp3</code>
       <button type="button" class="btn-modal-close" id="btn-close-modal">Got it!</button>
     </div>
   </div>
 
   <script>
-    let activeProvider = 'cantonese'; // Default to Cantonese as in screenshot
+    let activeProvider = 'cantonese';
 
     const tabEleven = document.getElementById('btn-tab-eleven');
     const tabCantonese = document.getElementById('btn-tab-cantonese');
@@ -255,6 +270,7 @@
     const streamStats = document.getElementById('stream-stats');
     const audioPlayer = document.getElementById('audio-player');
     const downloadBtn = document.getElementById('btn-download');
+    const downloadHint = document.getElementById('download-hint');
 
     const downloadModal = document.getElementById('download-modal');
     const closeModalBtn = document.getElementById('btn-close-modal');
@@ -322,6 +338,7 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
       streamBtn.disabled = true;
       monitor.style.display = 'block';
       downloadBtn.style.display = 'none';
+      downloadHint.style.display = 'none';
       streamStatus.innerText = 'Synthesizing soundtrack via server...';
       streamStats.innerText = 'Buffering binary...';
 
@@ -346,19 +363,20 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
 
         const audioUrl = URL.createObjectURL(audioBlob);
 
-        // 1. Attach to audio player with full timeline & duration
+        // 1. Audio player playback
         audioPlayer.src = audioUrl;
         audioPlayer.play().catch(() => {});
 
-        // 2. Setup download button
+        // 2. Download button
         downloadBtn.href = audioUrl;
         downloadBtn.setAttribute('download', 'soundtrack.mp3');
         downloadBtn.style.display = 'flex';
+        downloadHint.style.display = 'block';
 
         streamStatus.innerText = 'Narration synthesized successfully!';
         streamStats.innerText = `Size: ${(audioBlob.size / 1024).toFixed(1)} KB`;
 
-        // 3. Prompt user to download locally
+        // 3. Trigger direct browser download
         const autoLink = document.createElement('a');
         autoLink.href = audioUrl;
         autoLink.download = 'soundtrack.mp3';
@@ -366,7 +384,7 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
         autoLink.click();
         document.body.removeChild(autoLink);
 
-        // 4. Open destination guidance popup
+        // 4. Modal showing user default downloads directory
         downloadModal.classList.add('open');
 
       } catch (err) {
@@ -379,7 +397,6 @@ The next day is even more exciting. 2nd November is Emily's birthday. She will c
       }
     });
 
-    // Initialize with Cantonese view as in screenshot
     setProvider('cantonese');
   </script>
 </body>
